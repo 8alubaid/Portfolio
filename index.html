@@ -44,6 +44,78 @@
       opacity: 0.03;
     }
 
+    /* ── CUSTOM CURSOR ───────────────────────────────────────── */
+    .cursor-dot,
+    .cursor-ring {
+      position: fixed;
+      top: 0; left: 0;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity .25s ease;
+    }
+    .cursor-dot {
+      width: 6px; height: 6px;
+      background: var(--accent2);
+      mix-blend-mode: difference;
+    }
+    .cursor-ring {
+      width: 38px; height: 38px;
+      border: 1px solid var(--accent);
+      background: rgba(124,106,247,0.05);
+      transition: width .35s cubic-bezier(.16,1,.3,1),
+                  height .35s cubic-bezier(.16,1,.3,1),
+                  border-color .3s, background .3s, opacity .25s;
+    }
+    .cursor-ring::after {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: 50%;
+      transform: scale(1);
+    }
+    body.has-cursor .cursor-dot,
+    body.has-cursor .cursor-ring { opacity: 1; }
+
+    body.has-cursor,
+    body.has-cursor a,
+    body.has-cursor button,
+    body.has-cursor .project-card,
+    body.has-cursor .exp-item {
+      cursor: none;
+    }
+
+    .cursor-ring.is-link {
+      width: 78px; height: 78px;
+      border-color: var(--accent2);
+      background: rgba(124,106,247,0.1);
+    }
+    .cursor-ring.is-link .cursor-label { opacity: 1; transform: scale(1); }
+
+    .cursor-ring.is-down { transform: translate(-50%, -50%) scale(0.85); }
+
+    .cursor-label {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity .25s, transform .25s;
+      white-space: nowrap;
+    }
+
+    /* magnetic targets get a smooth easing back */
+    .magnetic {
+      transition: transform .35s cubic-bezier(.16,1,.3,1);
+      display: inline-flex;
+    }
+    .contact-link.magnetic { display: inline-flex; }
+
     /* ── NAV ─────────────────────────────────────────────────── */
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
@@ -115,6 +187,8 @@
       top: 50%; left: 50%;
       transform: translate(-60%, -50%);
       pointer-events: none;
+      transition: transform .6s cubic-bezier(.16,1,.3,1), background .6s;
+      will-change: transform;
     }
 
     .hero-inner {
@@ -203,6 +277,7 @@
       color: var(--accent2);
       flex-shrink: 0;
       position: relative;
+      transition: transform .25s cubic-bezier(.16,1,.3,1);
     }
     .hero-avatar::after {
       content: '';
@@ -224,9 +299,10 @@
       border-bottom: 1px solid var(--border);
       opacity: 0;
       transform: translateY(16px);
-      transition: opacity .5s, transform .5s;
+      transition: opacity .5s, transform .5s, background .3s;
     }
     .exp-item.visible { opacity: 1; transform: none; }
+    .exp-item:hover { background: rgba(124,106,247,0.04); }
 
     .exp-date {
       font-family: var(--mono);
@@ -268,18 +344,41 @@
       gap: 1.5rem;
     }
 
-    .project-card {
+    a.project-card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 1.8rem;
-      transition: border-color .2s, transform .2s;
       opacity: 0;
       transform: translateY(12px);
-      transition: opacity .4s, transform .4s, border-color .2s;
+      transition: opacity .4s, transform .4s, border-color .25s, background .25s, box-shadow .25s;
+      position: relative;
+      overflow: hidden;
     }
     .project-card.visible { opacity: 1; transform: none; }
-    .project-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .project-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px -16px rgba(124,106,247,.55);
+    }
+
+    /* subtle cursor-following glow inside each card */
+    .project-card .card-glow {
+      position: absolute;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124,106,247,.16) 0%, transparent 70%);
+      top: var(--gy, 50%); left: var(--gx, 50%);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .3s;
+      z-index: 0;
+    }
+    .project-card:hover .card-glow { opacity: 1; }
 
     .project-num {
       font-family: var(--mono);
@@ -287,6 +386,7 @@
       color: var(--accent);
       letter-spacing: 0.14em;
       margin-bottom: 1rem;
+      position: relative; z-index: 1;
     }
     .project-title {
       font-family: var(--display);
@@ -294,15 +394,18 @@
       font-weight: 700;
       margin-bottom: 0.7rem;
       color: var(--text);
+      position: relative; z-index: 1;
     }
     .project-desc {
       font-size: 0.88rem;
       color: var(--muted);
       line-height: 1.65;
+      position: relative; z-index: 1;
     }
     .project-tags {
       display: flex; flex-wrap: wrap; gap: 0.5rem;
       margin-top: 1.2rem;
+      position: relative; z-index: 1;
     }
     .tag {
       font-family: var(--mono);
@@ -314,6 +417,20 @@
       border-radius: 4px;
       letter-spacing: 0.06em;
     }
+    .project-open {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 1.4rem;
+      display: flex; align-items: center; gap: 0.5rem;
+      position: relative; z-index: 1;
+      transition: color .25s, gap .25s;
+    }
+    .project-open::after { content: '→'; transition: transform .25s; }
+    .project-card:hover .project-open { color: var(--accent2); gap: 0.8rem; }
+    .project-card:hover .project-open::after { transform: translateX(4px); }
 
     /* ── CONTACT ─────────────────────────────────────────────── */
     #contact { padding: 6rem 0 5rem; }
@@ -341,7 +458,7 @@
       border: 1px solid var(--border);
       padding: 0.6rem 1.3rem;
       border-radius: 6px;
-      transition: all .2s;
+      transition: color .2s, border-color .2s, transform .35s cubic-bezier(.16,1,.3,1);
     }
     .contact-link:hover { color: var(--accent2); border-color: var(--accent); }
 
@@ -382,9 +499,20 @@
       .projects-grid { grid-template-columns: 1fr; }
       .contact-box { padding: 2rem 1.5rem; }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cursor-dot, .cursor-ring { display: none; }
+      body.has-cursor, body.has-cursor a, body.has-cursor button,
+      body.has-cursor .project-card, body.has-cursor .exp-item { cursor: auto; }
+      .magnetic, .hero-glow, .card-glow { transition: none !important; }
+    }
   </style>
 </head>
 <body>
+
+  <!-- custom cursor elements -->
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"><span class="cursor-label" id="cursorLabel">View</span></div>
 
   <!-- NAV -->
   <nav>
@@ -398,7 +526,7 @@
 
   <!-- HERO -->
   <section id="hero">
-    <div class="hero-glow"></div>
+    <div class="hero-glow" id="heroGlow"></div>
     <div class="container">
       <div class="hero-inner">
         <div>
@@ -411,12 +539,12 @@ Recently graduated with Bachelor’s degree in Electrical & Computer Engineering
           </p>
           <div class="hero-actions">
             <!-- <a href="#" class="btn btn-primary">Download Resume</a> -->
-            <a href="#experience" class="btn btn-outline">See Experience</a>
-            <a href="#projects" class="btn btn-outline">See Projects</a>
-            <a href="#contact" class="btn btn-outline">Contact Me</a>
+            <a href="#experience" class="btn btn-outline magnetic">See Experience</a>
+            <a href="#projects" class="btn btn-outline magnetic">See Projects</a>
+            <a href="#contact" class="btn btn-outline magnetic">Contact Me</a>
           </div>
         </div>
-        <img src="my-photo.jpg" alt="Faris Balubaid" class="hero-avatar">    </div>
+        <img src="my-photo.jpg" alt="Faris Balubaid" class="hero-avatar" id="heroAvatar">    </div>
   </section>
 
   <!-- EXPERIENCE -->
@@ -494,7 +622,8 @@ Recently graduated with Bachelor’s degree in Electrical & Computer Engineering
           </div>
         </div> -->
 
-        <div class="project-card">
+        <a class="project-card" href="project-1.html" data-cursor="View">
+          <span class="card-glow"></span>
           <div class="project-num">01</div>
           <div class="project-title">DemoSat RadTest - Colorado Space Grant Consortium sponsored by NASA </div>
           <p class="project-desc">
@@ -505,9 +634,11 @@ Recently graduated with Bachelor’s degree in Electrical & Computer Engineering
             <span class="tag">C++ Programming</span>
             <!-- <span class="tag">RabbitMQ</span> -->
           </div>
-        </div>
+          <div class="project-open">View project</div>
+        </a>
 
-        <div class="project-card">
+        <a class="project-card" href="project-2.html" data-cursor="View">
+          <span class="card-glow"></span>
           <div class="project-num">02</div>
           <div class="project-title">Dockerized Message Board Web Application</div>
           <p class="project-desc">
@@ -518,7 +649,8 @@ Recently graduated with Bachelor’s degree in Electrical & Computer Engineering
             <span class="tag">PostgreSQL</span>
             <span class="tag">Docker</span>
           </div>
-        </div>
+          <div class="project-open">View project</div>
+        </a>
 
         <!-- <div class="project-card">
           <div class="project-num">04</div>
@@ -534,7 +666,8 @@ Recently graduated with Bachelor’s degree in Electrical & Computer Engineering
           </div>
         </div> -->
 
-        <div class="project-card">
+        <a class="project-card" href="project-3.html" data-cursor="View">
+          <span class="card-glow"></span>
           <div class="project-num">03</div>
           <div class="project-title">Golden Arduino Printed Circuit Board Design Project</div>
           <p class="project-desc">
@@ -545,7 +678,8 @@ Recently graduated with Bachelor’s degree in Electrical & Computer Engineering
             <span class="tag">PCB Design</span>
             <!-- <span class="tag">Spleeter</span> -->
           </div>
-        </div>
+          <div class="project-open">View project</div>
+        </a>
 
       </div>
     </div>
@@ -559,8 +693,8 @@ Recently graduated with Bachelor’s degree in Electrical & Computer Engineering
         <h2>Let's Connect</h2>
         <p class="contact-sub">Open to new opportunities, collaborations, and interesting conversations.</p>
         <div class="contact-links">
-          <a href="mailto:iifbalubaid@gmail.com" class="contact-link">✉ Email</a>
-          <a href="https://www.linkedin.com/in/farisbalubaid/" class="contact-link" target="_blank">LinkedIn</a>
+          <a href="mailto:iifbalubaid@gmail.com" class="contact-link magnetic">✉ Email</a>
+          <a href="https://www.linkedin.com/in/farisbalubaid/" class="contact-link magnetic" target="_blank">LinkedIn</a>
           <!-- <a href="https://github.com/yourhandle" class="contact-link" target="_blank">GitHub</a> -->
         </div>
         <!-- <a href="#" class="btn btn-primary">Download Resume</a> -->
@@ -586,6 +720,103 @@ Recently graduated with Bachelor’s degree in Electrical & Computer Engineering
     }, { threshold: 0.1 });
 
     document.querySelectorAll('.exp-item, .project-card').forEach(el => observer.observe(el));
+
+    /* ── CREATIVE CURSOR ─────────────────────────────────────── */
+    (function () {
+      const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      if (!isFinePointer) return;
+
+      document.body.classList.add('has-cursor');
+
+      const dot = document.getElementById('cursorDot');
+      const ring = document.getElementById('cursorRing');
+      const label = document.getElementById('cursorLabel');
+
+      let mouseX = window.innerWidth / 2;
+      let mouseY = window.innerHeight / 2;
+      let ringX = mouseX;
+      let ringY = mouseY;
+
+      window.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        dot.style.left = mouseX + 'px';
+        dot.style.top = mouseY + 'px';
+      });
+
+      function loop() {
+        ringX += (mouseX - ringX) * 0.18;
+        ringY += (mouseY - ringY) * 0.18;
+        ring.style.left = ringX + 'px';
+        ring.style.top = ringY + 'px';
+        requestAnimationFrame(loop);
+      }
+      loop();
+
+      window.addEventListener('mousedown', () => ring.classList.add('is-down'));
+      window.addEventListener('mouseup', () => ring.classList.remove('is-down'));
+
+      // grow + label on interactive targets
+      document.querySelectorAll('a, button').forEach((el) => {
+        el.addEventListener('mouseenter', () => {
+          ring.classList.add('is-link');
+          label.textContent = el.dataset.cursor || (el.classList.contains('project-card') ? 'View' : '');
+        });
+        el.addEventListener('mouseleave', () => {
+          ring.classList.remove('is-link');
+          label.textContent = '';
+        });
+      });
+
+      // magnetic pull for buttons & contact links
+      document.querySelectorAll('.magnetic').forEach((el) => {
+        el.addEventListener('mousemove', (e) => {
+          const r = el.getBoundingClientRect();
+          const relX = e.clientX - r.left - r.width / 2;
+          const relY = e.clientY - r.top - r.height / 2;
+          el.style.transform = `translate(${relX * 0.3}px, ${relY * 0.3}px)`;
+        });
+        el.addEventListener('mouseleave', () => {
+          el.style.transform = 'translate(0, 0)';
+        });
+      });
+
+      // subtle parallax glow in hero, follows the mouse
+      const hero = document.getElementById('hero');
+      const heroGlow = document.getElementById('heroGlow');
+      hero.addEventListener('mousemove', (e) => {
+        const r = hero.getBoundingClientRect();
+        const px = (e.clientX - r.left) / r.width - 0.5;
+        const py = (e.clientY - r.top) / r.height - 0.5;
+        heroGlow.style.transform = `translate(${-60 + px * 18}%, ${-50 + py * 18}%)`;
+      });
+      hero.addEventListener('mouseleave', () => {
+        heroGlow.style.transform = 'translate(-60%, -50%)';
+      });
+
+      // gentle tilt on the avatar
+      const avatar = document.getElementById('heroAvatar');
+      if (avatar) {
+        avatar.addEventListener('mousemove', (e) => {
+          const r = avatar.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width - 0.5;
+          const py = (e.clientY - r.top) / r.height - 0.5;
+          avatar.style.transform = `rotateX(${-py * 12}deg) rotateY(${px * 12}deg)`;
+        });
+        avatar.addEventListener('mouseleave', () => {
+          avatar.style.transform = 'rotateX(0) rotateY(0)';
+        });
+      }
+
+      // cursor-following inner glow on each project card
+      document.querySelectorAll('.project-card').forEach((card) => {
+        card.addEventListener('mousemove', (e) => {
+          const r = card.getBoundingClientRect();
+          card.style.setProperty('--gx', `${e.clientX - r.left}px`);
+          card.style.setProperty('--gy', `${e.clientY - r.top}px`);
+        });
+      });
+    })();
   </script>
 
 </body>
