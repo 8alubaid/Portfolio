@@ -132,11 +132,11 @@ No CSS changes needed — the shared stylesheet handles it.
 
 | Asset | Referenced in | Status |
 |---|---|---|
-| `img/my-photo.jpg` | `index.html` hero avatar | **Missing** — falls back to an "FB" monogram until added. Square image, ≥800×800px recommended. |
+| `img/my-photo.jpg` | `index.html` hero avatar | ✅ **In place** — recovered from the previous repo upload and re-cropped for the circular avatar. |
 | `video/demosat-test.mp4` | `project-1.html` media section | **Missing** — falls back to a "footage coming soon" placeholder until added. |
 | `resume/faris-balubaid-resume.pdf` | Hero + contact "Download Resume" buttons | ✅ **In place** — buttons are live. Re-export from Overleaf and overwrite this same file to update. |
 
-Both remaining fallbacks are functional, not broken — the site looks intentional either way, and starts using real media the moment the files are dropped into place. See [`resume/README.md`](resume/README.md) for the Overleaf → PDF workflow.
+The remaining fallback is functional, not broken — the site looks intentional either way, and starts using the real video the moment the file is dropped into place. See [`resume/README.md`](resume/README.md) for the Overleaf → PDF workflow.
 
 ## Deployment
 
@@ -151,7 +151,7 @@ This is a static site, so any static host works:
 
 ## Known Issues / TODO
 
-- [ ] Add `img/my-photo.jpg` (real headshot)
+- [x] Headshot added at `img/my-photo.jpg`
 - [ ] Add `video/demosat-test.mp4` (DemoSat test/flight footage)
 - [ ] Decide the fate of `project-4.html` — merge its intended video slot into `project-1.html` (already done structurally) and remove the stray file, or repurpose it as a real fourth project
 - [x] Resume PDF added at `resume/faris-balubaid-resume.pdf` — download buttons are live
