@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dockerized Message Board — Faris Balubaid</title>
+  <meta name="description" content="A full-stack forum web application — Node.js, Express, PostgreSQL, and Docker Compose, with bcrypt-hashed auth and session-based access control." />
+  <meta name="theme-color" content="#09090f" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/project.css">
+</head>
+<body>
+
+  <div class="scroll-progress" id="scrollProgress"></div>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"><span class="cursor-label" id="cursorLabel"></span></div>
+
+  <!-- NAV -->
+  <nav class="site-nav">
+    <a class="nav-logo" href="index.html"><span class="nav-status-dot"></span>FarisBalubaid.dev</a>
+    <ul class="nav-links">
+      <li><a href="index.html#experience">Experience</a></li>
+      <li><a href="index.html#projects">Projects</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- PROJECT HERO -->
+  <section id="project-hero" class="glow-section">
+    <div class="project-glow glow" id="projectGlow"></div>
+    <div class="container">
+      <div class="project-num-big">Project 02</div>
+      <h1 class="project-name">Dockerized Message Board Web Application</h1>
+      <p class="project-summary">
+        A full-stack forum application — boards, posts, and comments — built collaboratively and shipped
+        as a fully containerized Node.js + PostgreSQL stack.
+      </p>
+      <div class="pill-row">
+        <span class="status-pill">Completed</span>
+        <span class="category-pill">Full-Stack · Team Project</span>
+      </div>
+      <div class="hero-actions-row">
+        <a href="index.html#projects" class="btn btn-outline magnetic">← Back to Projects</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section class="detail-section reveal">
+    <div class="container">
+      <div class="section-label">Overview</div>
+      <p class="detail-text">
+        Working as part of a small collaborative team, I helped build a discussion-forum web application
+        end to end — from the relational data model up through authenticated, session-protected routes. The
+        app lets users create boards, start posts within them, and comment on threads, backed by a
+        PostgreSQL schema and served through an Express.js API.
+      </p>
+      <p class="detail-text">
+        The whole stack ships as a single <code>docker-compose</code> definition, so the Node.js service
+        and its PostgreSQL database spin up together with one command — no manual environment setup on
+        a new machine.
+      </p>
+    </div>
+  </section>
+
+  <!-- ROLE + STACK -->
+  <section class="detail-section reveal">
+    <div class="container">
+      <div class="detail-grid">
+        <div>
+          <div class="section-label">My Role</div>
+          <ul class="exp-bullets">
+            <li>Built Express.js backend routes for authentication, board/post creation, and protected page access.</li>
+            <li>Modeled and queried a relational PostgreSQL schema for users, boards, posts, and comments.</li>
+            <li>Implemented secure login with bcrypt password hashing and session-based authentication.</li>
+            <li>Containerized the full stack with Docker Compose (Node.js + PostgreSQL services).</li>
+          </ul>
+        </div>
+        <div>
+          <div class="section-label">Tech Stack</div>
+          <div class="project-tags">
+            <span class="tag">Node.js</span>
+            <span class="tag">Express.js</span>
+            <span class="tag">PostgreSQL</span>
+            <span class="tag">Docker &amp; Docker Compose</span>
+            <span class="tag">bcrypt</span>
+            <span class="tag">Session Auth</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEDIA -->
+  <section class="detail-section reveal">
+    <div class="container">
+      <div class="section-label">Screens</div>
+      <div class="media-grid">
+        <div class="media-tile"><span class="media-icon">◱</span>Board view — coming soon</div>
+        <div class="media-tile"><span class="media-icon">◱</span>Post thread — coming soon</div>
+        <div class="media-tile"><span class="media-icon">◱</span>Login &amp; auth — coming soon</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGINATION -->
+  <div class="container">
+    <nav class="project-pagination" aria-label="More projects">
+      <a class="pagination-link prev magnetic" href="project-1.html">
+        <span class="pagination-label">← Previous</span>
+        <span class="pagination-title">DemoSat RadTest</span>
+      </a>
+      <a class="pagination-link next magnetic" href="project-3.html">
+        <span class="pagination-label">Next →</span>
+        <span class="pagination-title">Golden Arduino PCB Design</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>© 2026 Faris Balubaid</span>
+    <span>Built with HTML · CSS · JS</span>
+  </footer>
+
+  <script src="js/main.js"></script>
+
+</body>
+</html>

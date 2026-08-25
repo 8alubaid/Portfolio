@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Golden Arduino PCB — Faris Balubaid</title>
+  <meta name="description" content="A custom Arduino-compatible PCB designed in Altium — signal-integrity-optimized layout, validated with oscilloscope benchmarking against a commercial Arduino." />
+  <meta name="theme-color" content="#09090f" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/project.css">
+</head>
+<body>
+
+  <div class="scroll-progress" id="scrollProgress"></div>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"><span class="cursor-label" id="cursorLabel"></span></div>
+
+  <!-- NAV -->
+  <nav class="site-nav">
+    <a class="nav-logo" href="index.html"><span class="nav-status-dot"></span>FarisBalubaid.dev</a>
+    <ul class="nav-links">
+      <li><a href="index.html#experience">Experience</a></li>
+      <li><a href="index.html#projects">Projects</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- PROJECT HERO -->
+  <section id="project-hero" class="glow-section">
+    <div class="project-glow glow" id="projectGlow"></div>
+    <div class="container">
+      <div class="project-num-big">Project 03</div>
+      <h1 class="project-name">Golden Arduino PCB Design Project</h1>
+      <p class="project-summary">
+        A custom Arduino-compatible board designed from scratch in Altium — laid out for signal integrity,
+        then benchmarked on the bench against a commercial Arduino.
+      </p>
+      <div class="pill-row">
+        <span class="status-pill">Completed</span>
+        <span class="category-pill">Hardware · PCB Design</span>
+      </div>
+      <div class="hero-actions-row">
+        <a href="index.html#projects" class="btn btn-outline magnetic">← Back to Projects</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section class="detail-section reveal">
+    <div class="container">
+      <div class="section-label">Overview</div>
+      <p class="detail-text">
+        The Golden Arduino project set out to design and validate a fully custom, Arduino-compatible board
+        from the ground up in Altium Designer — not just replicating the reference design, but improving on
+        it where the layout allowed. The board keeps USB programming support and Uno R3 shield compatibility,
+        so it drops into the same ecosystem as a stock Arduino while being built and tuned in-house.
+      </p>
+      <p class="detail-text">
+        Success was measured against the thing it was meant to replace: a commercial Arduino Uno, benchmarked
+        directly on the bench with an oscilloscope.
+      </p>
+    </div>
+  </section>
+
+  <!-- ROLE + STACK -->
+  <section class="detail-section reveal">
+    <div class="container">
+      <div class="detail-grid">
+        <div>
+          <div class="section-label">My Role</div>
+          <ul class="exp-bullets">
+            <li>Designed a custom Arduino-compatible PCB in Altium Designer with USB programming support and Uno R3 shield compatibility.</li>
+            <li>Optimized the layout for signal integrity — decoupling capacitor placement, shortened traces, and refined component placement.</li>
+            <li>Integrated test points, indicator LEDs, power regulation, and USB-to-UART communication circuitry.</li>
+            <li>Validated the board with oscilloscope-based signal integrity and power-noise analysis, benchmarked against a commercial Arduino.</li>
+          </ul>
+        </div>
+        <div>
+          <div class="section-label">Tech Stack</div>
+          <div class="project-tags">
+            <span class="tag">Altium Designer</span>
+            <span class="tag">PCB Layout</span>
+            <span class="tag">Signal Integrity</span>
+            <span class="tag">Oscilloscope Testing</span>
+            <span class="tag">USB-to-UART</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEDIA -->
+  <section class="detail-section reveal">
+    <div class="container">
+      <div class="section-label">Board &amp; Bench</div>
+      <div class="media-grid">
+        <div class="media-tile"><span class="media-icon">◱</span>Board layout — coming soon</div>
+        <div class="media-tile"><span class="media-icon">◱</span>Oscilloscope trace — coming soon</div>
+        <div class="media-tile"><span class="media-icon">◱</span>Assembled prototype — coming soon</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGINATION -->
+  <div class="container">
+    <nav class="project-pagination" aria-label="More projects">
+      <a class="pagination-link prev magnetic" href="project-2.html">
+        <span class="pagination-label">← Previous</span>
+        <span class="pagination-title">Dockerized Message Board</span>
+      </a>
+      <a class="pagination-link next magnetic" href="project-1.html">
+        <span class="pagination-label">Next →</span>
+        <span class="pagination-title">DemoSat RadTest</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>© 2026 Faris Balubaid</span>
+    <span>Built with HTML · CSS · JS</span>
+  </footer>
+
+  <script src="js/main.js"></script>
+
+</body>
+</html>

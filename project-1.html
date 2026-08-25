@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DemoSat RadTest — Faris Balubaid</title>
+  <meta name="description" content="Arduino shield PCB prototype for a Colorado Space Grant Consortium high-altitude balloon payload, sponsored by NASA — sensor integration, testing, and radiation-protection analysis." />
+  <meta name="theme-color" content="#09090f" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/project.css">
+</head>
+<body>
+
+  <div class="scroll-progress" id="scrollProgress"></div>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"><span class="cursor-label" id="cursorLabel"></span></div>
+
+  <!-- NAV -->
+  <nav class="site-nav">
+    <a class="nav-logo" href="index.html"><span class="nav-status-dot"></span>FarisBalubaid.dev</a>
+    <ul class="nav-links">
+      <li><a href="index.html#experience">Experience</a></li>
+      <li><a href="index.html#projects">Projects</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- PROJECT HERO -->
+  <section id="project-hero" class="glow-section">
+    <div class="project-glow glow" id="projectGlow"></div>
+    <div class="container">
+      <div class="project-num-big">Project 01</div>
+      <h1 class="project-name">DemoSat RadTest — Colorado Space Grant Consortium</h1>
+      <p class="project-summary">
+        An Arduino shield PCB built for a NASA-sponsored high-altitude balloon payload — designed, integrated,
+        tested, and flown as part of the Colorado Space Grant Consortium's DemoSat program.
+      </p>
+      <div class="pill-row">
+        <span class="status-pill">Flown &amp; completed</span>
+        <span class="category-pill">Hardware · Embedded Systems</span>
+      </div>
+      <div class="hero-actions-row">
+        <a href="index.html#projects" class="btn btn-outline magnetic">← Back to Projects</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section class="detail-section reveal">
+    <div class="container">
+      <div class="section-label">Overview</div>
+      <p class="detail-text">
+        The Colorado Space Grant Consortium's DemoSat program flies student-built payloads to the edge of
+        space on high-altitude weather balloons. My contribution was an Arduino shield — a prototype PCB
+        that stacks directly onto the payload's flight computer — carrying the sensors and support circuitry
+        the mission needed to characterize the radiation environment during ascent, float, and descent.
+      </p>
+      <p class="detail-text">
+        The work spanned the full hardware lifecycle: schematic and layout for the shield, sourcing and
+        validating commercial-off-the-shelf (COTS) sensors, bringing up the board on the bench, supporting
+        the firmware side of data acquisition, and ultimately verifying the platform held up to mission
+        requirements before flight.
+      </p>
+    </div>
+  </section>
+
+  <!-- ROLE + STACK -->
+  <section class="detail-section reveal">
+    <div class="container">
+      <div class="detail-grid">
+        <div>
+          <div class="section-label">My Role</div>
+          <ul class="exp-bullets">
+            <li>Designed an Arduino shield PCB prototype for the high-altitude balloon payload.</li>
+            <li>Integrated and validated COTS sensors for flight-ready operation.</li>
+            <li>Supported firmware development for on-board sensor data acquisition.</li>
+            <li>Led system testing, debugging, and hardware integration to meet mission requirements.</li>
+            <li>Presented design decisions, test results, and radiation-protection recommendations in formal reports and presentations.</li>
+          </ul>
+        </div>
+        <div>
+          <div class="section-label">Tech Stack</div>
+          <div class="project-tags">
+            <span class="tag">Arduino / C++</span>
+            <span class="tag">PCB Design</span>
+            <span class="tag">Sensor Integration</span>
+            <span class="tag">High-Altitude Balloon Systems</span>
+            <span class="tag">Technical Reporting</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MEDIA -->
+  <section class="detail-section reveal">
+    <div class="container">
+      <div class="section-label">Test Footage</div>
+      <video
+        class="project-video"
+        src="video/demosat-test.mp4"
+        controls
+        playsinline
+      ></video>
+    </div>
+  </section>
+
+  <!-- PAGINATION -->
+  <div class="container">
+    <nav class="project-pagination" aria-label="More projects">
+      <a class="pagination-link prev magnetic" href="project-3.html">
+        <span class="pagination-label">← Previous</span>
+        <span class="pagination-title">Golden Arduino PCB Design</span>
+      </a>
+      <a class="pagination-link next magnetic" href="project-2.html">
+        <span class="pagination-label">Next →</span>
+        <span class="pagination-title">Dockerized Message Board</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>© 2026 Faris Balubaid</span>
+    <span>Built with HTML · CSS · JS</span>
+  </footer>
+
+  <script src="js/main.js"></script>
+
+</body>
+</html>
