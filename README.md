@@ -149,10 +149,16 @@ Every fallback above is functional, not broken — the site looks intentional ei
 
 This is a static site, so any static host works:
 
-**GitHub Pages** (matches the `FarisBalubaid.dev`-style branding in the nav):
+**GitHub Pages** (matches the `FarisBalubaid.dev`-style branding in the nav) — live at [8alubaid.github.io/Portfolio](https://8alubaid.github.io/Portfolio/):
 1. Push this repo to GitHub.
 2. Settings → Pages → deploy from the `main` branch, root directory.
 3. For a custom domain, add a `CNAME` file at the repo root containing the domain, and point its DNS at GitHub Pages.
+
+The repo includes a `.nojekyll` file at the root — without it, GitHub Pages runs everything through
+Jekyll by default, which is unnecessary for a plain static site and can cause a push to silently fail
+to rebuild (the live site keeps serving the last successful build with no obvious error). If the live
+site ever looks stale after a push, check the **Actions** tab on the repo for a failed "pages build
+and deployment" run — that's the real error log.
 
 **Netlify / Vercel**: import the repo, no build command, publish directory `/`.
 
