@@ -32,6 +32,13 @@
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   if ('outputColorSpace' in renderer) renderer.outputColorSpace = THREE.SRGBColorSpace;
 
+  /* ── read the live theme colors instead of hardcoding them, so a  ── */
+  /* ── future palette change in base.css just works here too       ── */
+  const rootStyle = getComputedStyle(document.documentElement);
+  const accentHex = rootStyle.getPropertyValue('--accent').trim() || '#d6b840';
+  const accent2Hex = rootStyle.getPropertyValue('--accent2').trim() || '#f0e2a0';
+  const accent2Rgb = rootStyle.getPropertyValue('--accent2-rgb').trim() || '240, 226, 160';
+
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
   camera.position.set(0, 0, 11);
@@ -74,7 +81,7 @@
   edgeGeo.setAttribute('position', new THREE.Float32BufferAttribute(edgePositions, 3));
   const edges = new THREE.LineSegments(
     edgeGeo,
-    new THREE.LineBasicMaterial({ color: 0x7c6af7, transparent: true, opacity: 0.22 })
+    new THREE.LineBasicMaterial({ color: new THREE.Color().setStyle(accentHex), transparent: true, opacity: 0.22 })
   );
 
   /* ── soft circular sprite texture, reused for nodes + pulses ── */
@@ -85,8 +92,8 @@
     const ctx = c.getContext('2d');
     const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
     g.addColorStop(0, 'rgba(255,255,255,1)');
-    g.addColorStop(0.4, 'rgba(196,181,253,0.85)');
-    g.addColorStop(1, 'rgba(196,181,253,0)');
+    g.addColorStop(0.4, `rgba(${accent2Rgb},0.85)`);
+    g.addColorStop(1, `rgba(${accent2Rgb},0)`);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, size, size);
     return new THREE.CanvasTexture(c);
@@ -108,7 +115,7 @@
       map: dotTexture,
       transparent: true,
       depthWrite: false,
-      color: 0xc4b5fd,
+      color: new THREE.Color().setStyle(accent2Hex),
       blending: THREE.AdditiveBlending,
     })
   );

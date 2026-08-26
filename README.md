@@ -85,8 +85,8 @@ All shared values live as CSS custom properties at the top of `css/base.css`:
 --bg:        #09090f;   /* page background */
 --surface:   #111118;   /* cards, pills, boxes */
 --border:    #1e1e2e;   /* hairlines */
---accent:    #7c6af7;   /* primary purple */
---accent2:   #c4b5fd;   /* lighter lavender, hover/emphasis */
+--accent:    #d6b840;   /* primary gold, sampled from the hero photo's foliage */
+--accent2:   #f0e2a0;   /* pale champagne gold, hover/emphasis */
 --text:      #e2e2f0;   /* body text */
 --muted:     #8a8aa8;   /* secondary text (tuned for AA contrast) */
 --mono:      'DM Mono', monospace;   /* labels, tags, dates */

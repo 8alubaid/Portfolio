@@ -14,7 +14,7 @@
   position: absolute;
   width: 600px; height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(124,106,247,.18) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--accent-rgb), .18) 0%, transparent 70%);
   top: 50%; left: 50%;
   transform: translate(-60%, -50%);
   pointer-events: none;
@@ -102,7 +102,7 @@
   content: '';
   position: absolute; inset: -6px;
   border-radius: 50%;
-  border: 1px solid rgba(124,106,247,.35);
+  border: 1px solid rgba(var(--accent-rgb), .35);
 }
 
 /* ── EXPERIENCE ──────────────────────────────────────────────── */
@@ -121,7 +121,7 @@
   transition: opacity .5s, transform .5s cubic-bezier(.16,1,.3,1), background .3s;
 }
 .exp-item.visible { opacity: 1; transform: perspective(1000px) translateY(0) rotateX(0deg); }
-.exp-item:hover { background: rgba(124,106,247,0.04); }
+.exp-item:hover { background: rgba(var(--accent-rgb), 0.04); }
 
 .exp-date {
   font-family: var(--mono);
@@ -176,7 +176,7 @@ a.project-card {
 .project-card.visible:hover {
   border-color: var(--accent);
   transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-6px) scale(1.015);
-  box-shadow: 0 20px 40px -18px rgba(124,106,247,.6);
+  box-shadow: 0 20px 40px -18px rgba(var(--accent-rgb), .6);
 }
 
 /* subtle cursor-following glow inside each card */
@@ -184,7 +184,7 @@ a.project-card {
   position: absolute;
   width: 220px; height: 220px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(124,106,247,.16) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--accent-rgb), .16) 0%, transparent 70%);
   top: var(--gy, 50%); left: var(--gx, 50%);
   transform: translate(-50%, -50%);
   pointer-events: none;
