@@ -9,7 +9,7 @@ No framework, no build step — static HTML/CSS/JS designed to load instantly an
 ## Features
 
 - **Live WebGL network scene** — an interactive [three.js](https://threejs.org/) node network rendered in the hero, standing in for the "Embedded · Networking · Cloud" line right next to it: nodes on a sphere connect to their nearest neighbors, small pulses travel the edges like data packets, and the whole thing eases toward the pointer while auto-rotating. Loaded via dynamic `import()` so a blocked/offline CDN just quietly falls back to the CSS glow underneath — the hero never breaks.
-- **3D cursor-tilt cards** — project cards and prev/next pagination cards tilt in perspective toward the pointer (`rotateX`/`rotateY` driven by CSS custom properties), on top of their existing cursor-following glow.
+- **Photo-forward 3D project cards** — each card leads with a cover photo that tilts in perspective toward the pointer (`rotateX`/`rotateY`) while the photo *inside* parallax-shifts the opposite way and scales up, plus a diagonal glossy light-sweep on hover — a convincing depth illusion built from nothing but CSS custom properties and one mousemove listener. Missing a cover photo yet? Falls back to a branded placeholder, no broken images. Prev/next pagination cards get the same tilt treatment.
 - **3D scroll-reveal** — sections tilt up out of a slight `rotateX` and fade in via `IntersectionObserver` as they enter the viewport, staggered per item.
 - **Custom cursor** — a trailing ring + dot that grows and labels itself over links, cards, and buttons; falls back to the native cursor on touch devices and when `prefers-reduced-motion` is set.
 - **Magnetic interactions** — buttons and contact links gently pull toward the pointer.
@@ -47,7 +47,11 @@ Website/
 │   ├── main.js            # Cursor, magnetic buttons, 3D tilt, scroll-reveal, scroll progress
 │   └── hero-scene.js      # three.js WebGL node-network scene (index.html hero only)
 ├── img/
-│   └── README.md          # Drop your headshot in as img/my-photo.jpg
+│   ├── README.md          # Drop your headshot in as img/my-photo.jpg
+│   ├── project-1/         # DemoSat photos — cover.jpg + 01–03.jpg (see its README)
+│   ├── project-2/         # Message Board photos — cover.jpg + 01–03.jpg
+│   ├── project-3/         # Golden Arduino photos — cover.jpg + 01–03.jpg
+│   └── experience/        # Small thumbnail for the Experience section — cover.jpg
 ├── video/
 │   └── README.md          # Drop project footage in here (see per-project notes)
 ├── resume/
@@ -124,7 +128,8 @@ It's deliberately cheap to render (a few hundred vertices, two draw calls for th
 1. Duplicate `project-3.html` and rename it (e.g. `project-5.html`).
 2. Update the `<title>`, `project-num-big`, `project-name`, status pill, overview copy, role bullets, tech-stack tags, and the media section.
 3. Fix the prev/next links at the bottom of the new page and of its new neighbors, so the loop (`1 → 2 → 3 → 1`) stays intact.
-4. Add a matching `<a class="project-card">` block in `index.html`'s `#projects` section, with the next sequential number.
+4. Add a matching `<a class="project-card">` block in `index.html`'s `#projects` section (copy the `.card-media` block too), with the next sequential number.
+5. Make an `img/project-5/` folder for its photos — `cover.jpg` for the card, `01.jpg`/`02.jpg`/... for the detail-page gallery.
 
 No CSS changes needed — the shared stylesheet handles it.
 
@@ -133,10 +138,12 @@ No CSS changes needed — the shared stylesheet handles it.
 | Asset | Referenced in | Status |
 |---|---|---|
 | `img/my-photo.jpg` | `index.html` hero avatar | ✅ **In place** — recovered from the previous repo upload and re-cropped for the circular avatar. |
-| `video/demosat-test.mp4` | `project-1.html` media section | **Missing** — falls back to a "footage coming soon" placeholder until added. |
+| `video/demosat-test.mp4` | `project-1.html` media section | ✅ **In place**. |
 | `resume/faris-balubaid-resume.pdf` | Hero + contact "Download Resume" buttons | ✅ **In place** — buttons are live. Re-export from Overleaf and overwrite this same file to update. |
+| `img/project-1/`, `project-2/`, `project-3/` | `index.html` cards + each detail-page photo gallery | **Empty** — see each folder's `README.md` for exact filenames. Cards and gallery tiles fall back to branded placeholders until filled in. |
+| `img/experience/cover.jpg` | `index.html` Experience thumbnail | **Empty** — thumbnail just doesn't render until added. |
 
-The remaining fallback is functional, not broken — the site looks intentional either way, and starts using the real video the moment the file is dropped into place. See [`resume/README.md`](resume/README.md) for the Overleaf → PDF workflow.
+Every fallback above is functional, not broken — the site looks intentional either way, and starts using real media the moment a file is dropped into its expected path. See [`resume/README.md`](resume/README.md) for the Overleaf → PDF workflow.
 
 ## Deployment
 
@@ -152,11 +159,12 @@ This is a static site, so any static host works:
 ## Known Issues / TODO
 
 - [x] Headshot added at `img/my-photo.jpg`
-- [ ] Add `video/demosat-test.mp4` (DemoSat test/flight footage)
+- [x] `video/demosat-test.mp4` added
 - [ ] Decide the fate of `project-4.html` — merge its intended video slot into `project-1.html` (already done structurally) and remove the stray file, or repurpose it as a real fourth project
 - [x] Resume PDF added at `resume/faris-balubaid-resume.pdf` — download buttons are live
+- [ ] Add project cover photos + gallery images (`img/project-1/`, `project-2/`, `project-3/` — see each folder's README)
+- [ ] Add an Experience thumbnail at `img/experience/cover.jpg`
 - [ ] Optional: wire Overleaf's GitHub sync + a LaTeX-compile GitHub Action for a fully automatic resume pipeline (see `resume/README.md`)
-- [ ] Optional: add real screenshots/renders to the media sections on each project page
 
 ## Contact
 

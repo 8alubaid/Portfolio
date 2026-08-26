@@ -138,17 +138,31 @@
     });
   }
 
-  /* ── project-card cursor-following glow ──────────────────── */
+  /* ── project-card cursor-following glow + 3D tilt + photo parallax ── */
   document.querySelectorAll('.project-card').forEach((card) => {
     card.addEventListener('mousemove', (e) => {
       const r = card.getBoundingClientRect();
-      card.style.setProperty('--gx', `${e.clientX - r.left}px`);
-      card.style.setProperty('--gy', `${e.clientY - r.top}px`);
+      const relX = e.clientX - r.left;
+      const relY = e.clientY - r.top;
+      const px = relX / r.width - 0.5;
+      const py = relY / r.height - 0.5;
+      card.style.setProperty('--gx', `${relX}px`);
+      card.style.setProperty('--gy', `${relY}px`);
+      card.style.setProperty('--ry', `${px * 8}deg`);
+      card.style.setProperty('--rx', `${-py * 8}deg`);
+      card.style.setProperty('--ix', `${-px * 16}px`);
+      card.style.setProperty('--iy', `${-py * 12}px`);
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.setProperty('--ry', '0deg');
+      card.style.setProperty('--rx', '0deg');
+      card.style.setProperty('--ix', '0px');
+      card.style.setProperty('--iy', '0px');
     });
   });
 
-  /* ── 3D cursor-tilt on project cards + pagination cards ──── */
-  document.querySelectorAll('.project-card, .pagination-link').forEach((card) => {
+  /* ── 3D cursor-tilt on pagination cards (no photo, tilt only) ── */
+  document.querySelectorAll('.pagination-link').forEach((card) => {
     card.addEventListener('mousemove', (e) => {
       const r = card.getBoundingClientRect();
       const px = (e.clientX - r.left) / r.width - 0.5;
