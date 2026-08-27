@@ -35,8 +35,13 @@
 .hero-canvas.is-ready { opacity: 1; }
 
 .globe-label {
+  /* deliberately no z-index: an explicit z-index here would make this
+     paint above .container's static content (the hero text) regardless
+     of DOM order, which is exactly the bug this avoided — leaving it
+     auto keeps it in the same paint layer as .hero-canvas, ordered by
+     DOM position (see hero-scene.js, inserted right after the canvas),
+     so it sits behind the text and the (position:relative) avatar. */
   position: absolute; top: 0; left: 0;
-  z-index: 2;
   display: flex; align-items: center; gap: 0.4rem;
   font-family: var(--mono);
   font-size: 0.66rem;

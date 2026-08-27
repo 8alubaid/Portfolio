@@ -208,7 +208,10 @@
     const labelEl = document.createElement('div');
     labelEl.className = 'globe-label';
     labelEl.innerHTML = `<span class="globe-label-dot"></span>${loc.name}`;
-    heroSection.appendChild(labelEl);
+    // insert right after the canvas (not appended at the end) so it stays
+    // behind the hero text/avatar in paint order — see the z-index note
+    // on .globe-label in home.css for why both pieces matter together
+    canvas.insertAdjacentElement('afterend', labelEl);
 
     return { ...loc, surface, tip, sprite, labelEl };
   });
