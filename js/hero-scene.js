@@ -1,9 +1,9 @@
 /* ══════════════════════════════════════════════════════════════
-   Hero background: an interactive WebGL node network rendered
-   with three.js — nodes on a sphere, connected to their nearest
-   neighbors, with small "data pulse" sprites traveling the edges.
-   Meant to read as a distributed/networked system, tying into the
-   "Embedded · Networking · Cloud" line right next to it.
+   Hero background: an interactive, semi-transparent 3D globe
+   rendered with three.js — real country border outlines (from
+   js/world-data.js), auto-rotating and easing toward the pointer,
+   with two marked locations: Jeddah, Saudi Arabia (raised & born)
+   and Boulder, Colorado (Bachelor's degree), connected by an arc.
 
    Progressive enhancement only: if the CDN import fails, WebGL is
    unsupported, or the user prefers reduced motion, this quietly
@@ -16,11 +16,14 @@
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  let THREE;
+  let THREE, WORLD_RINGS;
   try {
-    THREE = await import('https://unpkg.com/three@0.160.0/build/three.module.js');
+    [THREE, { WORLD_RINGS }] = await Promise.all([
+      import('https://unpkg.com/three@0.160.0/build/three.module.js'),
+      import('./world-data.js'),
+    ]);
   } catch (err) {
-    return; // offline or CDN blocked — CSS glow remains the fallback
+    return; // offline, CDN blocked, or local data file missing — CSS glow remains the fallback
   }
 
   let renderer;
@@ -41,7 +44,7 @@
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-  camera.position.set(0, 0, 11);
+  camera.position.set(0, 0, 11.5);
 
   function resize() {
     const w = heroSection.clientWidth;
@@ -52,39 +55,56 @@
     camera.updateProjectionMatrix();
   }
 
-  /* ── build nodes evenly across a sphere (Fibonacci lattice) ── */
-  const NODE_COUNT = window.innerWidth < 768 ? 40 : 70;
-  const RADIUS = 5.4;
-  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-  const nodes = [];
-  for (let i = 0; i < NODE_COUNT; i++) {
-    const y = 1 - (i / (NODE_COUNT - 1)) * 2;
-    const r = Math.sqrt(Math.max(0, 1 - y * y));
-    const theta = goldenAngle * i;
-    nodes.push(new THREE.Vector3(Math.cos(theta) * r, y, Math.sin(theta) * r).multiplyScalar(RADIUS));
+  const RADIUS = 5.2;
+
+  /* standard lat/lon -> sphere-surface conversion, shared by every  */
+  /* piece of geometry below so borders, pins, and the arc all line  */
+  /* up on the same globe                                            */
+  function latLonToVec3(lat, lon, r) {
+    const phi = (90 - lat) * (Math.PI / 180);
+    const theta = (lon + 180) * (Math.PI / 180);
+    return new THREE.Vector3(
+      -r * Math.sin(phi) * Math.cos(theta),
+      r * Math.cos(phi),
+      r * Math.sin(phi) * Math.sin(theta)
+    );
   }
 
-  /* ── connect each node to its nearest few neighbors ─────────── */
-  const K = 3;
-  const edgePositions = [];
-  nodes.forEach((n, i) => {
-    const nearest = nodes
-      .map((m, j) => ({ j, d: i === j ? Infinity : n.distanceTo(m) }))
-      .sort((a, b) => a.d - b.d)
-      .slice(0, K);
-    nearest.forEach(({ j }) => {
-      edgePositions.push(n.x, n.y, n.z, nodes[j].x, nodes[j].y, nodes[j].z);
-    });
-  });
+  const group = new THREE.Group();
+  scene.add(group);
 
-  const edgeGeo = new THREE.BufferGeometry();
-  edgeGeo.setAttribute('position', new THREE.Float32BufferAttribute(edgePositions, 3));
-  const edges = new THREE.LineSegments(
-    edgeGeo,
-    new THREE.LineBasicMaterial({ color: new THREE.Color().setStyle(accentHex), transparent: true, opacity: 0.22 })
+  /* ── faint transparent globe fill ────────────────────────────── */
+  const globe = new THREE.Mesh(
+    new THREE.SphereGeometry(RADIUS, 48, 32),
+    new THREE.MeshBasicMaterial({
+      color: new THREE.Color().setStyle(accentHex),
+      transparent: true,
+      opacity: 0.045,
+      depthWrite: false,
+    })
   );
+  group.add(globe);
 
-  /* ── soft circular sprite texture, reused for nodes + pulses ── */
+  /* ── real country border outlines ────────────────────────────── */
+  const borderPositions = [];
+  WORLD_RINGS.forEach((flat) => {
+    const pts = [];
+    for (let i = 0; i < flat.length; i += 2) {
+      pts.push(latLonToVec3(flat[i + 1], flat[i], RADIUS * 1.002));
+    }
+    for (let i = 0; i < pts.length - 1; i++) {
+      borderPositions.push(pts[i].x, pts[i].y, pts[i].z, pts[i + 1].x, pts[i + 1].y, pts[i + 1].z);
+    }
+  });
+  const borderGeo = new THREE.BufferGeometry();
+  borderGeo.setAttribute('position', new THREE.Float32BufferAttribute(borderPositions, 3));
+  const borders = new THREE.LineSegments(
+    borderGeo,
+    new THREE.LineBasicMaterial({ color: new THREE.Color().setStyle(accentHex), transparent: true, opacity: 0.5 })
+  );
+  group.add(borders);
+
+  /* ── soft circular sprite texture, reused for markers + pulses ── */
   function makeDotTexture() {
     const size = 64;
     const c = document.createElement('canvas');
@@ -100,47 +120,78 @@
   }
   const dotTexture = makeDotTexture();
 
-  const nodePositions = new Float32Array(nodes.length * 3);
-  nodes.forEach((n, i) => {
-    nodePositions[i * 3] = n.x;
-    nodePositions[i * 3 + 1] = n.y;
-    nodePositions[i * 3 + 2] = n.z;
+  /* ── two marked locations ────────────────────────────────────── */
+  const LOCATIONS = [
+    { name: 'Jeddah, Saudi Arabia', lat: 21.4858, lon: 39.1925 },
+    { name: 'Boulder, Colorado', lat: 40.015, lon: -105.2705 },
+  ];
+
+  const markers = LOCATIONS.map((loc) => {
+    const surface = latLonToVec3(loc.lat, loc.lon, RADIUS);
+    const outward = surface.clone().normalize();
+    const tip = surface.clone().add(outward.clone().multiplyScalar(0.4));
+
+    const pinGeo = new THREE.BufferGeometry().setFromPoints([surface, tip]);
+    const pin = new THREE.Line(
+      pinGeo,
+      new THREE.LineBasicMaterial({ color: new THREE.Color().setStyle(accent2Hex), transparent: true, opacity: 0.9 })
+    );
+
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: dotTexture,
+        color: new THREE.Color().setStyle(accent2Hex),
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
+    );
+    sprite.position.copy(tip);
+    sprite.scale.setScalar(0.42);
+
+    group.add(pin, sprite);
+
+    const labelEl = document.createElement('div');
+    labelEl.className = 'globe-label';
+    labelEl.innerHTML = `<span class="globe-label-dot"></span>${loc.name}`;
+    heroSection.appendChild(labelEl);
+
+    return { ...loc, surface, tip, sprite, labelEl };
   });
-  const nodeGeo = new THREE.BufferGeometry();
-  nodeGeo.setAttribute('position', new THREE.Float32BufferAttribute(nodePositions, 3));
-  const points = new THREE.Points(
-    nodeGeo,
-    new THREE.PointsMaterial({
-      size: 0.22,
-      map: dotTexture,
-      transparent: true,
-      depthWrite: false,
-      color: new THREE.Color().setStyle(accent2Hex),
-      blending: THREE.AdditiveBlending,
-    })
+
+  /* ── arc connecting the two locations, lifted above the surface ── */
+  const [origin, dest] = markers;
+  const ARC_SEGMENTS = 64;
+  const arcPoints = [];
+  const originDir = origin.surface.clone().normalize();
+  const destDir = dest.surface.clone().normalize();
+  for (let i = 0; i <= ARC_SEGMENTS; i++) {
+    const t = i / ARC_SEGMENTS;
+    const dir = originDir.clone().lerp(destDir, t).normalize();
+    const lift = RADIUS * (1 + 0.3 * Math.sin(Math.PI * t));
+    arcPoints.push(dir.multiplyScalar(lift));
+  }
+  const arcGeo = new THREE.BufferGeometry().setFromPoints(arcPoints);
+  const arc = new THREE.Line(
+    arcGeo,
+    new THREE.LineBasicMaterial({ color: new THREE.Color().setStyle(accent2Hex), transparent: true, opacity: 0.4 })
   );
+  group.add(arc);
 
-  const group = new THREE.Group();
-  group.add(edges, points);
-  scene.add(group);
-
-  /* ── traveling "data pulse" sprites along random edges ──────── */
-  const PULSE_COUNT = 9;
+  /* traveling pulses along the arc */
+  const PULSE_COUNT = 2;
   const pulses = [];
   for (let i = 0; i < PULSE_COUNT; i++) {
     const sprite = new THREE.Sprite(
       new THREE.SpriteMaterial({ map: dotTexture, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })
     );
-    sprite.scale.setScalar(0.34);
-    let a = nodes[(Math.random() * nodes.length) | 0];
-    let b = nodes[(Math.random() * nodes.length) | 0];
-    while (b === a) b = nodes[(Math.random() * nodes.length) | 0];
-    pulses.push({ sprite, a, b, t: Math.random(), speed: 0.25 + Math.random() * 0.35 });
+    sprite.scale.setScalar(0.3);
+    pulses.push({ sprite, t: i / PULSE_COUNT, speed: 0.12 });
     group.add(sprite);
   }
 
   /* ── pointer parallax (eased, independent of auto-spin) ─────── */
-  let targetRotX = 0, targetRotY = 0, parallaxX = 0, parallaxY = 0, autoRotation = 0;
+  let targetRotX = 0, targetRotY = 0, parallaxX = 0, parallaxY = 0, autoRotation = 0.4;
   window.addEventListener('mousemove', (e) => {
     const r = heroSection.getBoundingClientRect();
     if (e.clientY < r.top || e.clientY > r.bottom) return;
@@ -162,8 +213,29 @@
     canvas.classList.add('is-ready');
   }
 
+  /* project each marker to screen space; hide its label when the  */
+  /* marker has rotated to the far side of the globe               */
+  const _worldPos = new THREE.Vector3();
+  function updateLabels() {
+    const rect = heroSection.getBoundingClientRect();
+    markers.forEach((m) => {
+      m.sprite.getWorldPosition(_worldPos);
+      const normal = _worldPos.clone().normalize();
+      const camDir = camera.position.clone().sub(_worldPos).normalize();
+      const front = normal.dot(camDir) > 0.15;
+
+      const projected = _worldPos.clone().project(camera);
+      const x = (projected.x * 0.5 + 0.5) * rect.width;
+      const y = (-projected.y * 0.5 + 0.5) * rect.height;
+      m.labelEl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -140%)`;
+      m.labelEl.style.opacity = front ? '1' : '0';
+    });
+  }
+
   if (reduceMotion) {
+    group.rotation.y = autoRotation;
     renderer.render(scene, camera);
+    updateLabels();
     reveal();
     return; // static single frame only — no rAF loop, no spin, no parallax
   }
@@ -172,7 +244,7 @@
     requestAnimationFrame(tick);
     if (!onScreen || document.hidden) return;
 
-    autoRotation += 0.0022;
+    autoRotation += 0.0015;
     parallaxX += (targetRotX - parallaxX) * 0.04;
     parallaxY += (targetRotY - parallaxY) * 0.04;
     group.rotation.x = parallaxX;
@@ -180,16 +252,14 @@
 
     pulses.forEach((p) => {
       p.t += p.speed * 0.01;
-      if (p.t >= 1) {
-        p.t = 0;
-        p.a = p.b;
-        let next = nodes[(Math.random() * nodes.length) | 0];
-        while (next === p.a) next = nodes[(Math.random() * nodes.length) | 0];
-        p.b = next;
-      }
-      p.sprite.position.lerpVectors(p.a, p.b, p.t);
+      if (p.t > 1) p.t -= 1;
+      const idx = p.t * ARC_SEGMENTS;
+      const i0 = Math.floor(idx);
+      const i1 = Math.min(i0 + 1, ARC_SEGMENTS);
+      p.sprite.position.lerpVectors(arcPoints[i0], arcPoints[i1], idx - i0);
     });
 
+    updateLabels();
     renderer.render(scene, camera);
     reveal();
   }

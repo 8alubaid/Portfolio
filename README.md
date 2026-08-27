@@ -8,7 +8,7 @@ No framework, no build step — static HTML/CSS/JS designed to load instantly an
 
 ## Features
 
-- **Live WebGL network scene** — an interactive [three.js](https://threejs.org/) node network rendered in the hero, standing in for the "Embedded · Networking · Cloud" line right next to it: nodes on a sphere connect to their nearest neighbors, small pulses travel the edges like data packets, and the whole thing eases toward the pointer while auto-rotating. Loaded via dynamic `import()` so a blocked/offline CDN just quietly falls back to the CSS glow underneath — the hero never breaks.
+- **Live WebGL globe** — an interactive [three.js](https://threejs.org/) globe rendered in the hero: real country border outlines, auto-rotating and easing toward the pointer, with two marked, geographically accurate locations — Jeddah, Saudi Arabia (raised & born) and Boulder, Colorado (Bachelor's degree) — connected by an arc with traveling pulses. Loaded via dynamic `import()` so a blocked/offline CDN just quietly falls back to the CSS glow underneath — the hero never breaks.
 - **Photo-forward 3D project cards** — each card leads with a cover photo that tilts in perspective toward the pointer (`rotateX`/`rotateY`) while the photo *inside* parallax-shifts the opposite way and scales up, plus a diagonal glossy light-sweep on hover — a convincing depth illusion built from nothing but CSS custom properties and one mousemove listener. Missing a cover photo yet? Falls back to a branded placeholder, no broken images. Prev/next pagination cards get the same tilt treatment.
 - **3D scroll-reveal** — sections tilt up out of a slight `rotateX` and fade in via `IntersectionObserver` as they enter the viewport, staggered per item.
 - **Custom cursor** — a trailing ring + dot that grows and labels itself over links, cards, and buttons; falls back to the native cursor on touch devices and when `prefers-reduced-motion` is set.
@@ -16,7 +16,7 @@ No framework, no build step — static HTML/CSS/JS designed to load instantly an
 - **Ambient parallax glow** — a soft radial highlight in each hero that tracks the pointer.
 - **Circuit-inspired accents** — a faint dot-grid backdrop, "pad"-style section markers, and a traveling glint animation along every section divider, a nod to PCB schematics.
 - **Case-study project pages** — each project gets its own page with an overview, role & contributions, tech stack, and a media section, not just a card.
-- **Fully responsive** — single-column collapse for nav, hero, experience, and project grid under 680px; the WebGL scene scales its node count down on narrow viewports.
+- **Fully responsive** — single-column collapse for nav, hero, experience, and project grid under 680px.
 - **Accessible & battery-conscious by default** — semantic sectioning, keyboard-reachable links, a `prefers-reduced-motion` path that disables the WebGL scene (renders one static frame) and every cursor/parallax/tilt effect, and the scene itself pauses rendering when the hero scrolls out of view or the tab is backgrounded.
 
 ## Tech Stack
@@ -45,7 +45,8 @@ Website/
 │   └── project.css        # Styles unique to the project-N.html case studies
 ├── js/
 │   ├── main.js            # Cursor, magnetic buttons, 3D tilt, scroll-reveal, scroll progress
-│   └── hero-scene.js      # three.js WebGL node-network scene (index.html hero only)
+│   ├── hero-scene.js      # three.js WebGL globe scene (index.html hero only)
+│   └── world-data.js      # Simplified real country border outlines used by the globe
 ├── img/
 │   ├── README.md          # Drop your headshot in as img/my-photo.jpg
 │   ├── project-1/         # DemoSat photos — cover.jpg + 01–03.jpg (see its README)
@@ -106,22 +107,23 @@ Reusable components defined in `base.css` and used across pages: `.btn` / `.btn-
 
 ## 3D Hero Scene
 
-`js/hero-scene.js` builds the node network entirely from primitives — no external model or texture files:
+`js/hero-scene.js` renders a semi-transparent, auto-rotating 3D globe:
 
-- **Nodes**: a Fibonacci lattice (golden-angle spiral) distributes ~70 points evenly across a sphere — the same trick used to distribute seeds on a sunflower head, which happens to be the simplest way to get an even point cloud on a sphere without clustering at the poles.
-- **Edges**: each node connects to its 3 nearest neighbors (brute-force distance search — trivial at this scale), drawn as a single `LineSegments` mesh.
-- **Pulses**: a handful of sprites continuously lerp between random node pairs, reading as data moving through the network.
+- **Country borders**: `js/world-data.js` holds real country border outlines — simplified via Douglas-Peucker from the [johan/world.geo.json](https://github.com/johan/world.geo.json) dataset (MIT) down to ~4,300 points across 281 rings (~55KB), coarse enough for a small decorative globe rather than a detailed map. Each ring is converted from lat/lon to sphere-surface XYZ with the standard equirectangular-to-3D formula and drawn as a single `LineSegments` mesh (one draw call for the entire world).
+- **Two marked locations**: Jeddah, Saudi Arabia (raised & born) and Boulder, Colorado (Bachelor's degree), placed at their real coordinates with the *exact same* lat/lon→3D conversion used for the borders, so they land precisely on the globe rather than being eyeballed. Each gets a small pin + a glowing sprite, and an HTML label that tracks its projected screen position every frame — faded out via a simple front/back-face check (dot product of the point's surface normal against the camera direction) when the globe's rotation carries it to the far side.
+- **Connecting arc**: a curved line between the two locations (spherical nlerp, lifted above the surface at its midpoint), with a couple of sprites continuously traveling along it.
 - **Interaction**: the whole group auto-rotates slowly and eases toward the pointer's position (separately from the auto-rotation, so parallax never fights the spin or compounds into a runaway rotation).
 
-It's deliberately cheap to render (a few hundred vertices, two draw calls for the network plus a handful of sprites) so it stays smooth even on modest hardware, and it degrades gracefully at every layer:
+It's deliberately cheap to render (~8,100 line vertices, a handful of sprites, two draw calls for the bulk of it) so it stays smooth even on modest hardware, and it degrades gracefully at every layer:
 
 | Condition | Behavior |
 |---|---|
-| CDN unreachable / import fails | Caught silently — the `<canvas>` stays transparent, the CSS radial glow underneath is the whole hero background |
+| CDN unreachable / import fails / `world-data.js` missing | Caught silently — the `<canvas>` stays transparent, the CSS radial glow underneath is the whole hero background |
 | WebGL unsupported | Same — `WebGLRenderer` construction is wrapped in `try/catch` |
 | `prefers-reduced-motion: reduce` | Renders exactly one static frame, no rotation, no parallax, no render loop |
 | Hero scrolled out of view / tab backgrounded | Render loop pauses via `IntersectionObserver` + `document.hidden`, resumes automatically |
-| Narrow viewport (< 768px) | Node count drops from 70 to 40 |
+
+To add or change a marked location, edit the `LOCATIONS` array near the top of `js/hero-scene.js` — everything else (pin, label, arc endpoints) derives from it automatically.
 
 ## Adding a New Project
 
@@ -179,4 +181,4 @@ and deployment" run — that's the real error log.
 
 ## License
 
-Site code (HTML/CSS/JS structure) is free to reference or adapt for your own portfolio — attribution appreciated. Personal content (bio, project write-ups, photos) is © Faris Balubaid and not for reuse. Fonts are served under their respective open-source licenses via Google Fonts (Syne, DM Sans, DM Mono — all OFL). [three.js](https://github.com/mrdoob/three.js) is MIT-licensed.
+Site code (HTML/CSS/JS structure) is free to reference or adapt for your own portfolio — attribution appreciated. Personal content (bio, project write-ups, photos) is © Faris Balubaid and not for reuse. Fonts are served under their respective open-source licenses via Google Fonts (Syne, DM Sans, DM Mono — all OFL). [three.js](https://github.com/mrdoob/three.js) is MIT-licensed. Country border data in `js/world-data.js` is simplified from [johan/world.geo.json](https://github.com/johan/world.geo.json) (MIT).
