@@ -20,17 +20,19 @@
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  let THREE, WORLD_RINGS, HIGHLIGHT_RINGS, HIGHLIGHT_CENTROIDS;
+  let THREE, WORLD_RINGS, HIGHLIGHT_RINGS, HIGHLIGHT_CENTROIDS, REGION_RINGS;
   try {
-    const [threeMod, worldMod, highlightMod] = await Promise.all([
+    const [threeMod, worldMod, highlightMod, regionMod] = await Promise.all([
       import('https://unpkg.com/three@0.160.0/build/three.module.js'),
       import('./world-data.js'),
       import('./highlight-data.js'),
+      import('./region-data.js'),
     ]);
     THREE = threeMod;
     WORLD_RINGS = worldMod.WORLD_RINGS;
     HIGHLIGHT_RINGS = highlightMod.HIGHLIGHT_RINGS;
     HIGHLIGHT_CENTROIDS = highlightMod.HIGHLIGHT_CENTROIDS;
+    REGION_RINGS = regionMod.REGION_RINGS;
   } catch (err) {
     return; // offline, CDN blocked, or a local data file missing — CSS glow remains the fallback
   }
@@ -161,6 +163,17 @@
     highlightGlows.push(glow);
   });
 
+  /* ── outlined regions (states/provinces) — bright outline, no glow ── */
+  Object.keys(REGION_RINGS).forEach((key) => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(ringsToSegments(REGION_RINGS[key], 1.008), 3));
+    const line = new THREE.LineSegments(
+      geo,
+      new THREE.LineBasicMaterial({ color: new THREE.Color().setStyle(accent2Hex), transparent: true, opacity: 0.85 })
+    );
+    group.add(line);
+  });
+
   /* ── two marked locations ────────────────────────────────────── */
   const LOCATIONS = [
     { name: 'Jeddah, Saudi Arabia', lat: 21.4858, lon: 39.1925 },
@@ -246,6 +259,7 @@
 
   /* ── click/touch-and-drag control, with a little momentum ──────── */
   const MAX_TILT = 1.3; // radians — keeps the poles from flipping past view
+  const DRAG_SENSITIVITY = 0.004; // radians per pixel of pointer movement
   let isDragging = false;
   let lastPointerX = 0, lastPointerY = 0;
   let dragOffsetX = 0, dragOffsetY = 0;
@@ -273,9 +287,9 @@
     const dy = e.clientY - lastPointerY;
     lastPointerX = e.clientX;
     lastPointerY = e.clientY;
-    dragOffsetY += dx * 0.006;
-    dragOffsetX = Math.max(-MAX_TILT, Math.min(MAX_TILT, dragOffsetX + dy * 0.006));
-    dragVelocityY = dx * 0.006;
+    dragOffsetY += dx * DRAG_SENSITIVITY;
+    dragOffsetX = Math.max(-MAX_TILT, Math.min(MAX_TILT, dragOffsetX + dy * DRAG_SENSITIVITY));
+    dragVelocityY = dx * DRAG_SENSITIVITY;
     if (reduceMotion) renderOnce(); // no rAF loop in that mode — render on every explicit input
   });
   window.addEventListener('pointerup', () => { isDragging = false; });

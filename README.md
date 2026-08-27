@@ -47,7 +47,10 @@ Website/
 │   ├── main.js            # Cursor, magnetic buttons, 3D tilt, scroll-reveal, scroll progress
 │   ├── hero-scene.js      # three.js WebGL globe scene (index.html hero only)
 │   ├── world-data.js      # Simplified real country border outlines used by the globe
-│   └── highlight-data.js  # Finer-detail outlines + centroids for the USA/Saudi Arabia highlight
+│   ├── highlight-data.js  # Finer-detail outlines + centroids for the USA/Saudi Arabia highlight
+│   └── region-data.js     # Colorado's state outline
+├── scripts/
+│   └── generate-map-data.py  # Regenerates all three data files above from source datasets
 ├── img/
 │   ├── README.md          # Drop your headshot in as img/my-photo.jpg
 │   ├── project-1/         # DemoSat photos — cover.jpg + 01–03.jpg (see its README)
@@ -113,10 +116,12 @@ Reusable components defined in `base.css` and used across pages: `.btn` / `.btn-
 - **Country borders**: `js/world-data.js` holds real country border outlines — simplified via Douglas-Peucker from the [johan/world.geo.json](https://github.com/johan/world.geo.json) dataset (MIT) down to ~4,300 points across 281 rings (~55KB), coarse enough for a small decorative globe rather than a detailed map. Each ring is converted from lat/lon to sphere-surface XYZ with the standard equirectangular-to-3D formula and drawn as a single `LineSegments` mesh (one draw call for the entire world).
 - **Two marked locations**: Jeddah, Saudi Arabia (raised & born) and Boulder, Colorado (Bachelor's degree), placed at their real coordinates with the *exact same* lat/lon→3D conversion used for the borders, so they land precisely on the globe rather than being eyeballed. Each gets a small pin + a glowing sprite, and an HTML label that tracks its projected screen position every frame — faded out via a simple front/back-face check (dot product of the point's surface normal against the camera direction) when the globe's rotation carries it to the far side.
 - **Connecting arc**: a curved line between the two locations (spherical nlerp, lifted above the surface at its midpoint), with a couple of sprites continuously traveling along it.
-- **Highlighted countries**: `js/highlight-data.js` holds finer-detail outlines (Douglas-Peucker at a much lower tolerance, since it's just two countries) for the United States and Saudi Arabia, drawn brighter and more opaque than the rest of the world, plus a soft additive-blended glow sprite over each one's centroid that gently pulses via a sine wave. Add more countries by extending the `TARGETS` dict in the (one-off) extraction script and re-running it — see the comment at the top of `highlight-data.js`.
+- **Highlighted countries**: `js/highlight-data.js` holds finer-detail outlines (Douglas-Peucker at a much lower tolerance, since it's just two countries) for the United States and Saudi Arabia, drawn brighter and more opaque than the rest of the world, plus a soft additive-blended glow sprite over each one's centroid that gently pulses via a sine wave.
+- **Outlined region**: `js/region-data.js` holds a state-level outline — Colorado, right where the Boulder marker sits — drawn brighter than the world borders but without a glow (it nests inside the already-highlighted USA, so a second glow there would just be noise). Sourced from a separate US-states dataset, since the world dataset only goes down to country level.
+  - To highlight another country or outline another state/province: edit `HIGHLIGHT_TARGETS` or `REGION_TARGETS` in `scripts/generate-map-data.py` and re-run it — see that script's docstring.
 - **Interaction**: two layers, so it always feels alive but is never fighting the person using it:
   - *Ambient*: the whole group auto-rotates slowly (`SPIN_SPEED`, intentionally gentle) and eases toward the pointer's position — passive, no click required.
-  - *Direct control*: click/touch-and-drag the globe (via the Pointer Events API, so it works with a mouse or a finger) to spin it yourself. Auto-rotation pauses the instant you press down and resumes smoothly from wherever you left it; releasing mid-drag carries a bit of momentum that decays over about a second and a half, rather than stopping dead. Vertical drag is clamped (`MAX_TILT`) so the globe can't be spun upside-down. The custom cursor grows and shows "Drag" over the globe, same language as "View" on a project card.
+  - *Direct control*: click/touch-and-drag the globe (via the Pointer Events API, so it works with a mouse or a finger) to spin it yourself, at a deliberately gentle `DRAG_SENSITIVITY`. Auto-rotation pauses the instant you press down and resumes smoothly from wherever you left it; releasing mid-drag carries a bit of momentum that decays over about a second and a half, rather than stopping dead. Vertical drag is clamped (`MAX_TILT`) so the globe can't be spun upside-down. The custom cursor grows and shows "Drag" over the globe, same language as "View" on a project card.
 
 It's deliberately cheap to render (~8,100 line vertices for the world plus a few hundred more for the highlights, a handful of sprites) so it stays smooth even on modest hardware, and it degrades gracefully at every layer:
 
@@ -185,4 +190,4 @@ and deployment" run — that's the real error log.
 
 ## License
 
-Site code (HTML/CSS/JS structure) is free to reference or adapt for your own portfolio — attribution appreciated. Personal content (bio, project write-ups, photos) is © Faris Balubaid and not for reuse. Fonts are served under their respective open-source licenses via Google Fonts (Syne, DM Sans, DM Mono — all OFL). [three.js](https://github.com/mrdoob/three.js) is MIT-licensed. Country border data in `js/world-data.js` is simplified from [johan/world.geo.json](https://github.com/johan/world.geo.json) (MIT).
+Site code (HTML/CSS/JS structure) is free to reference or adapt for your own portfolio — attribution appreciated. Personal content (bio, project write-ups, photos) is © Faris Balubaid and not for reuse. Fonts are served under their respective open-source licenses via Google Fonts (Syne, DM Sans, DM Mono — all OFL). [three.js](https://github.com/mrdoob/three.js) is MIT-licensed. Country border data in `js/world-data.js` and `js/highlight-data.js` is simplified from [johan/world.geo.json](https://github.com/johan/world.geo.json) (MIT); the Colorado outline in `js/region-data.js` is simplified from [PublicaMundi/MappingAPI](https://github.com/PublicaMundi/MappingAPI)'s US Census-derived state boundaries (public domain).
