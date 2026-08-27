@@ -8,7 +8,7 @@ No framework, no build step — static HTML/CSS/JS designed to load instantly an
 
 ## Features
 
-- **Live WebGL globe** — an interactive [three.js](https://threejs.org/) globe rendered in the hero: real country border outlines, auto-rotating and easing toward the pointer, with two marked, geographically accurate locations — Jeddah, Saudi Arabia (raised & born) and Boulder, Colorado (Bachelor's degree) — connected by an arc with traveling pulses. Loaded via dynamic `import()` so a blocked/offline CDN just quietly falls back to the CSS glow underneath — the hero never breaks.
+- **Live, click-and-drag WebGL globe** — an interactive [three.js](https://threejs.org/) globe rendered in the hero: real country border outlines, drifting in a slow ambient spin and easing toward the pointer. Click (or touch) and drag to take direct control and spin it yourself, with a bit of momentum on release — auto-spin pauses while dragging and picks back up after. The United States and Saudi Arabia are drawn with a brighter outline and a soft pulsing glow, and two exact locations are marked — Jeddah, Saudi Arabia (raised & born) and Boulder, Colorado (Bachelor's degree) — connected by an arc with traveling pulses, each with a floating label that fades out as the globe's rotation carries it out of view. Loaded via dynamic `import()` so a blocked/offline CDN just quietly falls back to the CSS glow underneath — the hero never breaks.
 - **Photo-forward 3D project cards** — each card leads with a cover photo that tilts in perspective toward the pointer (`rotateX`/`rotateY`) while the photo *inside* parallax-shifts the opposite way and scales up, plus a diagonal glossy light-sweep on hover — a convincing depth illusion built from nothing but CSS custom properties and one mousemove listener. Missing a cover photo yet? Falls back to a branded placeholder, no broken images. Prev/next pagination cards get the same tilt treatment.
 - **3D scroll-reveal** — sections tilt up out of a slight `rotateX` and fade in via `IntersectionObserver` as they enter the viewport, staggered per item.
 - **Custom cursor** — a trailing ring + dot that grows and labels itself over links, cards, and buttons; falls back to the native cursor on touch devices and when `prefers-reduced-motion` is set.
@@ -46,7 +46,8 @@ Website/
 ├── js/
 │   ├── main.js            # Cursor, magnetic buttons, 3D tilt, scroll-reveal, scroll progress
 │   ├── hero-scene.js      # three.js WebGL globe scene (index.html hero only)
-│   └── world-data.js      # Simplified real country border outlines used by the globe
+│   ├── world-data.js      # Simplified real country border outlines used by the globe
+│   └── highlight-data.js  # Finer-detail outlines + centroids for the USA/Saudi Arabia highlight
 ├── img/
 │   ├── README.md          # Drop your headshot in as img/my-photo.jpg
 │   ├── project-1/         # DemoSat photos — cover.jpg + 01–03.jpg (see its README)
@@ -112,15 +113,18 @@ Reusable components defined in `base.css` and used across pages: `.btn` / `.btn-
 - **Country borders**: `js/world-data.js` holds real country border outlines — simplified via Douglas-Peucker from the [johan/world.geo.json](https://github.com/johan/world.geo.json) dataset (MIT) down to ~4,300 points across 281 rings (~55KB), coarse enough for a small decorative globe rather than a detailed map. Each ring is converted from lat/lon to sphere-surface XYZ with the standard equirectangular-to-3D formula and drawn as a single `LineSegments` mesh (one draw call for the entire world).
 - **Two marked locations**: Jeddah, Saudi Arabia (raised & born) and Boulder, Colorado (Bachelor's degree), placed at their real coordinates with the *exact same* lat/lon→3D conversion used for the borders, so they land precisely on the globe rather than being eyeballed. Each gets a small pin + a glowing sprite, and an HTML label that tracks its projected screen position every frame — faded out via a simple front/back-face check (dot product of the point's surface normal against the camera direction) when the globe's rotation carries it to the far side.
 - **Connecting arc**: a curved line between the two locations (spherical nlerp, lifted above the surface at its midpoint), with a couple of sprites continuously traveling along it.
-- **Interaction**: the whole group auto-rotates slowly and eases toward the pointer's position (separately from the auto-rotation, so parallax never fights the spin or compounds into a runaway rotation).
+- **Highlighted countries**: `js/highlight-data.js` holds finer-detail outlines (Douglas-Peucker at a much lower tolerance, since it's just two countries) for the United States and Saudi Arabia, drawn brighter and more opaque than the rest of the world, plus a soft additive-blended glow sprite over each one's centroid that gently pulses via a sine wave. Add more countries by extending the `TARGETS` dict in the (one-off) extraction script and re-running it — see the comment at the top of `highlight-data.js`.
+- **Interaction**: two layers, so it always feels alive but is never fighting the person using it:
+  - *Ambient*: the whole group auto-rotates slowly (`SPIN_SPEED`, intentionally gentle) and eases toward the pointer's position — passive, no click required.
+  - *Direct control*: click/touch-and-drag the globe (via the Pointer Events API, so it works with a mouse or a finger) to spin it yourself. Auto-rotation pauses the instant you press down and resumes smoothly from wherever you left it; releasing mid-drag carries a bit of momentum that decays over about a second and a half, rather than stopping dead. Vertical drag is clamped (`MAX_TILT`) so the globe can't be spun upside-down. The custom cursor grows and shows "Drag" over the globe, same language as "View" on a project card.
 
-It's deliberately cheap to render (~8,100 line vertices, a handful of sprites, two draw calls for the bulk of it) so it stays smooth even on modest hardware, and it degrades gracefully at every layer:
+It's deliberately cheap to render (~8,100 line vertices for the world plus a few hundred more for the highlights, a handful of sprites) so it stays smooth even on modest hardware, and it degrades gracefully at every layer:
 
 | Condition | Behavior |
 |---|---|
-| CDN unreachable / import fails / `world-data.js` missing | Caught silently — the `<canvas>` stays transparent, the CSS radial glow underneath is the whole hero background |
+| CDN unreachable / import fails / a data file is missing | Caught silently — the `<canvas>` stays transparent, the CSS radial glow underneath is the whole hero background |
 | WebGL unsupported | Same — `WebGLRenderer` construction is wrapped in `try/catch` |
-| `prefers-reduced-motion: reduce` | Renders exactly one static frame, no rotation, no parallax, no render loop |
+| `prefers-reduced-motion: reduce` | No auto-spin and no render loop — renders one static frame, but dragging still works, rendering only on each explicit input rather than continuously |
 | Hero scrolled out of view / tab backgrounded | Render loop pauses via `IntersectionObserver` + `document.hidden`, resumes automatically |
 
 To add or change a marked location, edit the `LOCATIONS` array near the top of `js/hero-scene.js` — everything else (pin, label, arc endpoints) derives from it automatically.

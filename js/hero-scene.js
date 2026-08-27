@@ -4,10 +4,14 @@
    js/world-data.js), auto-rotating and easing toward the pointer,
    with two marked locations: Jeddah, Saudi Arabia (raised & born)
    and Boulder, Colorado (Bachelor's degree), connected by an arc.
+   The United States and Saudi Arabia are drawn with a brighter
+   outline + a soft glow (js/highlight-data.js). Click-and-drag (or
+   touch-drag) spins the globe directly, with a little momentum on
+   release; auto-spin pauses while dragging and resumes after.
 
    Progressive enhancement only: if the CDN import fails, WebGL is
-   unsupported, or the user prefers reduced motion, this quietly
-   does nothing and the CSS radial glow underneath carries the hero.
+   unsupported, or the data files are missing, this quietly does
+   nothing and the CSS radial glow underneath carries the hero.
    ══════════════════════════════════════════════════════════════ */
 (async function () {
   const canvas = document.getElementById('heroCanvas');
@@ -16,14 +20,19 @@
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  let THREE, WORLD_RINGS;
+  let THREE, WORLD_RINGS, HIGHLIGHT_RINGS, HIGHLIGHT_CENTROIDS;
   try {
-    [THREE, { WORLD_RINGS }] = await Promise.all([
+    const [threeMod, worldMod, highlightMod] = await Promise.all([
       import('https://unpkg.com/three@0.160.0/build/three.module.js'),
       import('./world-data.js'),
+      import('./highlight-data.js'),
     ]);
+    THREE = threeMod;
+    WORLD_RINGS = worldMod.WORLD_RINGS;
+    HIGHLIGHT_RINGS = highlightMod.HIGHLIGHT_RINGS;
+    HIGHLIGHT_CENTROIDS = highlightMod.HIGHLIGHT_CENTROIDS;
   } catch (err) {
-    return; // offline, CDN blocked, or local data file missing — CSS glow remains the fallback
+    return; // offline, CDN blocked, or a local data file missing — CSS glow remains the fallback
   }
 
   let renderer;
@@ -70,6 +79,20 @@
     );
   }
 
+  function ringsToSegments(rings, radiusScale) {
+    const positions = [];
+    rings.forEach((flat) => {
+      const pts = [];
+      for (let i = 0; i < flat.length; i += 2) {
+        pts.push(latLonToVec3(flat[i + 1], flat[i], RADIUS * radiusScale));
+      }
+      for (let i = 0; i < pts.length - 1; i++) {
+        positions.push(pts[i].x, pts[i].y, pts[i].z, pts[i + 1].x, pts[i + 1].y, pts[i + 1].z);
+      }
+    });
+    return positions;
+  }
+
   const group = new THREE.Group();
   scene.add(group);
 
@@ -86,25 +109,15 @@
   group.add(globe);
 
   /* ── real country border outlines ────────────────────────────── */
-  const borderPositions = [];
-  WORLD_RINGS.forEach((flat) => {
-    const pts = [];
-    for (let i = 0; i < flat.length; i += 2) {
-      pts.push(latLonToVec3(flat[i + 1], flat[i], RADIUS * 1.002));
-    }
-    for (let i = 0; i < pts.length - 1; i++) {
-      borderPositions.push(pts[i].x, pts[i].y, pts[i].z, pts[i + 1].x, pts[i + 1].y, pts[i + 1].z);
-    }
-  });
   const borderGeo = new THREE.BufferGeometry();
-  borderGeo.setAttribute('position', new THREE.Float32BufferAttribute(borderPositions, 3));
+  borderGeo.setAttribute('position', new THREE.Float32BufferAttribute(ringsToSegments(WORLD_RINGS, 1.002), 3));
   const borders = new THREE.LineSegments(
     borderGeo,
     new THREE.LineBasicMaterial({ color: new THREE.Color().setStyle(accentHex), transparent: true, opacity: 0.5 })
   );
   group.add(borders);
 
-  /* ── soft circular sprite texture, reused for markers + pulses ── */
+  /* ── soft circular sprite texture, reused for markers + pulses + glows ── */
   function makeDotTexture() {
     const size = 64;
     const c = document.createElement('canvas');
@@ -119,6 +132,34 @@
     return new THREE.CanvasTexture(c);
   }
   const dotTexture = makeDotTexture();
+
+  /* ── highlighted countries: brighter outline + soft area glow ─── */
+  const highlightGlows = [];
+  Object.keys(HIGHLIGHT_RINGS).forEach((key) => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(ringsToSegments(HIGHLIGHT_RINGS[key], 1.006), 3));
+    const line = new THREE.LineSegments(
+      geo,
+      new THREE.LineBasicMaterial({ color: new THREE.Color().setStyle(accent2Hex), transparent: true, opacity: 0.95 })
+    );
+    group.add(line);
+
+    const [clon, clat] = HIGHLIGHT_CENTROIDS[key];
+    const glow = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: dotTexture,
+        color: new THREE.Color().setStyle(accent2Hex),
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        opacity: 0.35,
+      })
+    );
+    glow.position.copy(latLonToVec3(clat, clon, RADIUS * 1.01));
+    glow.scale.setScalar(2.6);
+    group.add(glow);
+    highlightGlows.push(glow);
+  });
 
   /* ── two marked locations ────────────────────────────────────── */
   const LOCATIONS = [
@@ -190,14 +231,55 @@
     group.add(sprite);
   }
 
-  /* ── pointer parallax (eased, independent of auto-spin) ─────── */
-  let targetRotX = 0, targetRotY = 0, parallaxX = 0, parallaxY = 0, autoRotation = 0.4;
+  /* ── slow ambient auto-rotation ───────────────────────────────── */
+  const SPIN_SPEED = 0.0005; // ~3x slower than the original network scene's spin
+  let autoRotation = 0.4;
+
+  /* ── passive pointer parallax (eased, only when not dragging) ─── */
+  let targetRotX = 0, targetRotY = 0, parallaxX = 0, parallaxY = 0;
   window.addEventListener('mousemove', (e) => {
     const r = heroSection.getBoundingClientRect();
     if (e.clientY < r.top || e.clientY > r.bottom) return;
     targetRotY = ((e.clientX - r.left) / r.width - 0.5) * 0.6;
     targetRotX = ((e.clientY - r.top) / r.height - 0.5) * 0.4;
   });
+
+  /* ── click/touch-and-drag control, with a little momentum ──────── */
+  const MAX_TILT = 1.3; // radians — keeps the poles from flipping past view
+  let isDragging = false;
+  let lastPointerX = 0, lastPointerY = 0;
+  let dragOffsetX = 0, dragOffsetY = 0;
+  let dragVelocityY = 0;
+
+  canvas.style.pointerEvents = 'auto';
+  canvas.style.touchAction = 'none';
+  canvas.dataset.cursor = 'Drag';
+
+  function applyRotation() {
+    group.rotation.x = dragOffsetX + (isDragging ? 0 : parallaxX);
+    group.rotation.y = autoRotation + dragOffsetY + (isDragging ? 0 : parallaxY);
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    isDragging = true;
+    lastPointerX = e.clientX;
+    lastPointerY = e.clientY;
+    dragVelocityY = 0;
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - lastPointerX;
+    const dy = e.clientY - lastPointerY;
+    lastPointerX = e.clientX;
+    lastPointerY = e.clientY;
+    dragOffsetY += dx * 0.006;
+    dragOffsetX = Math.max(-MAX_TILT, Math.min(MAX_TILT, dragOffsetX + dy * 0.006));
+    dragVelocityY = dx * 0.006;
+    if (reduceMotion) renderOnce(); // no rAF loop in that mode — render on every explicit input
+  });
+  window.addEventListener('pointerup', () => { isDragging = false; });
+  window.addEventListener('pointercancel', () => { isDragging = false; });
 
   /* ── only animate while the hero is actually on screen ──────── */
   let onScreen = true;
@@ -232,23 +314,39 @@
     });
   }
 
-  if (reduceMotion) {
-    group.rotation.y = autoRotation;
-    renderer.render(scene, camera);
+  function renderOnce() {
+    applyRotation();
     updateLabels();
+    renderer.render(scene, camera);
     reveal();
-    return; // static single frame only — no rAF loop, no spin, no parallax
   }
 
+  if (reduceMotion) {
+    renderOnce(); // static frame; drag still works via the listeners above, rendering on demand
+    return; // no rAF loop — no autonomous motion
+  }
+
+  let clock = 0;
   function tick() {
     requestAnimationFrame(tick);
     if (!onScreen || document.hidden) return;
 
-    autoRotation += 0.0015;
-    parallaxX += (targetRotX - parallaxX) * 0.04;
-    parallaxY += (targetRotY - parallaxY) * 0.04;
-    group.rotation.x = parallaxX;
-    group.rotation.y = autoRotation + parallaxY;
+    if (!isDragging) {
+      autoRotation += SPIN_SPEED;
+      parallaxX += (targetRotX - parallaxX) * 0.04;
+      parallaxY += (targetRotY - parallaxY) * 0.04;
+      if (Math.abs(dragVelocityY) > 0.00005) {
+        dragOffsetY += dragVelocityY;
+        dragVelocityY *= 0.95;
+      } else {
+        dragVelocityY = 0;
+      }
+    }
+    applyRotation();
+
+    clock += 0.02;
+    const pulse = 0.28 + Math.sin(clock) * 0.1;
+    highlightGlows.forEach((g) => { g.material.opacity = pulse; });
 
     pulses.forEach((p) => {
       p.t += p.speed * 0.01;

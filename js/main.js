@@ -82,7 +82,7 @@
     window.addEventListener('mousedown', () => ring.classList.add('is-down'));
     window.addEventListener('mouseup', () => ring.classList.remove('is-down'));
 
-    document.querySelectorAll('a, button').forEach((el) => {
+    document.querySelectorAll('a, button, .hero-canvas').forEach((el) => {
       el.addEventListener('mouseenter', () => {
         ring.classList.add('is-link');
         if (label) label.textContent = el.dataset.cursor || (el.classList.contains('project-card') ? 'View' : '');

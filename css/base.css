@@ -76,7 +76,8 @@ body::after {
 }
 body.has-cursor .cursor-dot, body.has-cursor .cursor-ring { opacity: 1; }
 body.has-cursor, body.has-cursor a, body.has-cursor button,
-body.has-cursor .project-card, body.has-cursor .exp-item { cursor: none; }
+body.has-cursor .project-card, body.has-cursor .exp-item,
+body.has-cursor .hero-canvas { cursor: none; }
 .cursor-ring.is-link { width: 78px; height: 78px; border-color: var(--accent2); background: rgba(var(--accent-rgb), 0.1); }
 .cursor-ring.is-link .cursor-label { opacity: 1; transform: scale(1); }
 .cursor-ring.is-down { transform: translate(-50%, -50%) scale(0.85); }

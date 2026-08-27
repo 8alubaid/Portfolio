@@ -1,9 +1,9 @@
 /* Simplified world-country border outlines used by hero-scene.js to draw
    the globe. [lon,lat,lon,lat,...] per ring — one array per country ring.
    Derived from the johan/world.geo.json dataset (MIT license), simplified
-   with Douglas-Peucker at a coarse tolerance (~0.35deg) sized for a small
-   decorative globe rather than a detailed map. Holes and slivers under a
-   bounding-box threshold are dropped to keep this file lean. */
+   with Douglas-Peucker at a coarse tolerance sized for a small decorative
+   globe rather than a detailed map. Regenerate with
+   scripts/generate-map-data.py. */
 export const WORLD_RINGS = [
 [61.21,35.65,62.98,35.4,65.75,37.66,69.2,37.15,70.81,38.49,71.84,36.74,73.26,37.5,75.16,37.13,71.85,36.51,71.26,36.07,71.61,35.15,70.88,33.99,69.93,34.02,70.32,33.36,69.26,32.5,69.32,31.9,66.94,31.3,66.35,29.89,64.15,29.34,60.87,29.83,61.78,30.74,60.54,32.98,61.21,35.65],
 [16.33,-5.88,17.47,-8.07,19.02,-7.99,20.09,-6.94,21.73,-7.29,22.16,-11.08,23.91,-10.93,24.02,-12.91,21.93,-12.9,21.89,-16.08,23.22,-17.52,21.38,-17.93,18.26,-17.31,14.06,-17.42,13.46,-16.97,11.73,-17.3,12.18,-14.45,13.74,-11.3,12.23,-6.29,16.33,-5.88],
