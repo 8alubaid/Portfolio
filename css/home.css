@@ -4,6 +4,7 @@
 
 /* ── HERO ────────────────────────────────────────────────────── */
 #hero {
+  min-height: 100vh;   /* fallback for browsers that don't understand svh */
   min-height: 100svh;
   display: flex; align-items: center;
   padding: 7rem 0 4rem;

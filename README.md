@@ -156,6 +156,16 @@ No CSS changes needed — the shared stylesheet handles it.
 
 Every fallback above is functional, not broken — the site looks intentional either way, and starts using real media the moment a file is dropped into its expected path. See [`resume/README.md`](resume/README.md) for the Overleaf → PDF workflow.
 
+## Browser & Mobile Support
+
+Built and tested to work the same on iPhone and Android, in any modern browser — not just Chrome. A few things that needed explicit handling:
+
+- **Safari-specific prefixes**: `-webkit-backdrop-filter` alongside `backdrop-filter` (the nav's blur), `-webkit-mask-image`, and `-webkit-line-clamp` for the project-card description clamp. Safari ignores several modern CSS features silently if the prefixed form is missing rather than falling back gracefully, so these aren't optional.
+- **Viewport units**: `min-height: 100svh` (accounts for mobile browser chrome/toolbars correctly) has a plain `100vh` declared right before it as a fallback for any browser that doesn't recognize `svh` — an unsupported value is ignored, not substituted, so without the fallback the hero would collapse to its content height instead of filling the screen.
+- **Touch vs. scroll on the draggable globe**: the globe's canvas covers the full hero section and captures pointer input to support drag-to-rotate. It's set to `touch-action: pan-y` rather than `none` — the difference matters: `none` would trap *every* touch starting in the hero, including a swipe meant to scroll the page, making the site feel broken/stuck on a phone. `pan-y` lets vertical swipes scroll natively while leaving horizontal swipes free for the drag handlers.
+- **Tap highlight**: `-webkit-tap-highlight-color: transparent` globally, so tapping a link/button on iOS or Android doesn't flash the browser's default gray highlight box, which would clash with the site's own hover/press styling.
+- Every interactive effect that depends on hover (custom cursor, magnetic pull, 3D card tilt) is scoped behind `(hover: hover) and (pointer: fine)` and simply doesn't run on touch devices — nothing on the site *requires* hover to function, it's all progressive enhancement on top of normal tap/click.
+
 ## Deployment
 
 This is a static site, so any static host works:

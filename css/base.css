@@ -2,7 +2,7 @@
    BASE — design tokens, reset, and components shared by every page
    ══════════════════════════════════════════════════════════════ */
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 :root {
   --bg:        #09090f;
@@ -95,6 +95,7 @@ body.has-cursor .hero-canvas { cursor: none; }
   display: flex; justify-content: space-between; align-items: center;
   padding: 1.1rem 2.5rem;
   background: rgba(9,9,15,0.75);
+  -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--border);
 }

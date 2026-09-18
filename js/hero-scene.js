@@ -269,7 +269,12 @@
   let dragVelocityY = 0;
 
   canvas.style.pointerEvents = 'auto';
-  canvas.style.touchAction = 'none';
+  // 'pan-y' (not 'none'): lets a vertical touch-swipe scroll the page
+  // natively, since the canvas covers the whole hero section and a
+  // full 'none' would trap every touch there, making the page
+  // impossible to scroll past on a phone. Horizontal swipes are left
+  // alone for the drag handlers below to pick up.
+  canvas.style.touchAction = 'pan-y';
   canvas.dataset.cursor = 'Drag';
 
   function applyRotation() {

@@ -4,6 +4,7 @@
 
 /* ── PROJECT HERO ────────────────────────────────────────────── */
 #project-hero {
+  min-height: 82vh;   /* fallback for browsers that don't understand svh */
   min-height: 82svh;
   display: flex; align-items: center;
   padding: 8rem 0 3rem;
