@@ -170,10 +170,10 @@ Built and tested to work the same on iPhone and Android, in any modern browser �
 
 This is a static site, so any static host works:
 
-**GitHub Pages** (matches the `FarisBalubaid.dev`-style branding in the nav) — live at [8alubaid.github.io/Portfolio](https://8alubaid.github.io/Portfolio/):
+**GitHub Pages** — live at [farisbalubaid.cloud](https://farisbalubaid.cloud) (matches the nav branding), still reachable at the underlying [8alubaid.github.io/Portfolio](https://8alubaid.github.io/Portfolio/) too:
 1. Push this repo to GitHub.
 2. Settings → Pages → deploy from the `main` branch, root directory.
-3. For a custom domain, add a `CNAME` file at the repo root containing the domain, and point its DNS at GitHub Pages.
+3. Custom domain: a `CNAME` file at the repo root contains `farisbalubaid.cloud`. DNS is pointed at GitHub Pages via four `A` records (apex) plus a `CNAME` record for `www` — see GitHub's [custom domain docs](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site) if setting this up on a fork. Once DNS resolves, check "Enforce HTTPS" in Settings → Pages.
 
 The repo includes a `.nojekyll` file at the root — without it, GitHub Pages runs everything through
 Jekyll by default, which is unnecessary for a plain static site and can cause a push to silently fail
@@ -189,6 +189,7 @@ and deployment" run — that's the real error log.
 - [x] `video/demosat-test.mp4` added
 - [ ] Decide the fate of `project-4.html` — merge its intended video slot into `project-1.html` (already done structurally) and remove the stray file, or repurpose it as a real fourth project
 - [x] Resume PDF added at `resume/faris-balubaid-resume.pdf` — download buttons are live
+- [x] Custom domain purchased (`farisbalubaid.cloud`) — `CNAME` file added, nav updated; pending DNS records at the registrar (see Deployment)
 - [ ] Add project cover photos + gallery images (`img/project-1/`, `project-2/`, `project-3/` — see each folder's README)
 - [ ] Add an Experience thumbnail at `img/experience/cover.jpg`
 - [ ] Optional: wire Overleaf's GitHub sync + a LaTeX-compile GitHub Action for a fully automatic resume pipeline (see `resume/README.md`)
