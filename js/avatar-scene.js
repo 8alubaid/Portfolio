@@ -8,10 +8,16 @@
    there's nothing to see around the back), with a gentle idle sway
    and a little drag momentum, echoing the hero globe's interaction.
 
+   Rendered unlit (MeshBasicMaterial, no lights in the scene) so
+   every block shows its exact sampled color from the source image —
+   no lighting/shading to tint or darken it — and there's no backing
+   plate of any kind: a fully transparent canvas with nothing behind
+   it but the hero's own background, so if the bust doesn't render
+   there's genuinely nothing there (no fallback image by design).
+
    Progressive enhancement only: if the CDN import fails, WebGL is
    unsupported, or the data file is missing, this quietly does
-   nothing and the flat img/avatar-pixelart.png underneath carries
-   the avatar instead.
+   nothing.
    ══════════════════════════════════════════════════════════════ */
 (async function () {
   const canvas = document.getElementById('heroAvatarCanvas');
@@ -30,7 +36,7 @@
     AVATAR_GRID = dataMod.AVATAR_GRID;
     AVATAR_VOXELS = dataMod.AVATAR_VOXELS;
   } catch (err) {
-    return; // offline, CDN blocked, or the data file is missing — flat PNG remains the fallback
+    return; // offline, CDN blocked, or the data file is missing
   }
   if (!AVATAR_VOXELS || !AVATAR_VOXELS.length) return;
 
@@ -42,9 +48,6 @@
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   if ('outputColorSpace' in renderer) renderer.outputColorSpace = THREE.SRGBColorSpace;
-
-  const rootStyle = getComputedStyle(document.documentElement);
-  const accentHex = rootStyle.getPropertyValue('--accent').trim() || '#d6b840';
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
@@ -59,24 +62,14 @@
     camera.updateProjectionMatrix();
   }
 
-  /* ── lighting: flat-ish Lambert shading to match the pixel-art's
-     flat-color aesthetic, warmed with the site's gold accent ─────── */
-  scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-  const key = new THREE.DirectionalLight(0xfff4d6, 0.9);
-  key.position.set(3, 4, 6);
-  scene.add(key);
-  const rim = new THREE.DirectionalLight(new THREE.Color().setStyle(accentHex), 0.5);
-  rim.position.set(-4, -2, 3);
-  scene.add(rim);
-
   /* ── build the voxel bust, centered on the actual portrait's ──── */
   /* ── bounding box (not the full grid, which has empty margin) ─── */
-  const CELL = 0.36;
+  const CELL = 0.55;
   const GAP_SCALE = 1.01; // >1: a hair of overlap, not a gap — flush faces can
                           // z-fight at the seam without it, which reads as a
                           // flickering gap even though none is there
-  const BASE_DEPTH = 0.26;
-  const BULGE = 0.9; // extra forward push at the bust's center
+  const BASE_DEPTH = 0.4;
+  const BULGE = 1.4; // extra forward push at the bust's center
 
   let minCol = Infinity, maxCol = -Infinity, minRow = Infinity, maxRow = -Infinity;
   AVATAR_VOXELS.forEach(([c, r]) => {
@@ -93,7 +86,7 @@
   scene.add(group);
 
   const geo = new THREE.BoxGeometry(1, 1, 1);
-  const mat = new THREE.MeshLambertMaterial();
+  const mat = new THREE.MeshBasicMaterial(); // unlit — exact source colors, no lighting tint
   const mesh = new THREE.InstancedMesh(geo, mat, AVATAR_VOXELS.length);
   const m = new THREE.Matrix4();
   const color = new THREE.Color();
@@ -114,7 +107,10 @@
       new THREE.Vector3(CELL * GAP_SCALE, CELL * GAP_SCALE, depth)
     );
     mesh.setMatrixAt(i, m);
-    mesh.setColorAt(i, color.setRGB(r / 255, g / 255, b / 255));
+    // explicit sRGB colorSpace: without it, three.js's color management
+    // treats these r/255 values as already-linear and darkens/shifts them,
+    // which is why the rendered colors didn't exactly match the source.
+    mesh.setColorAt(i, color.setRGB(r / 255, g / 255, b / 255, THREE.SRGBColorSpace));
   });
   mesh.instanceMatrix.needsUpdate = true;
   if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
@@ -177,6 +173,7 @@
     if (announced) return;
     announced = true;
     canvas.classList.add('is-ready');
+    avatarEl.classList.add('is-ready'); // fades out the "FB" fallback text
   }
 
   function renderOnce() {

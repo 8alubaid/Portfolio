@@ -126,30 +126,21 @@
 
 .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
 
-/* avatar */
+/* avatar — no background/border/frame by design: just the 3D voxel bust
+   (avatar-scene.js) floating transparently over the hero itself. "FB" is
+   the plain-text fallback, visible only if the WebGL render never happens. */
 .hero-avatar {
   width: clamp(260px, 26vw, 400px); height: clamp(260px, 26vw, 400px);
-  border-radius: 50%;
-  border: 2px solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  background: var(--surface);
   font-family: var(--display);
   font-size: 3rem;
   font-weight: 800;
   color: var(--accent2);
   flex-shrink: 0;
   position: relative;
-  overflow: hidden;
 }
-.hero-avatar img {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-  object-fit: contain;
-  image-rendering: pixelated;
-}
-/* 3D voxel bust rendered from the pixel-art portrait in avatar-scene.js —
-   sits on top of the flat img, which stays underneath as the fallback if
-   the WebGL render doesn't happen (offline, unsupported, or a JS error). */
+.hero-avatar-fallback { transition: opacity .5s ease; }
+.hero-avatar.is-ready .hero-avatar-fallback { opacity: 0; }
 .hero-avatar-canvas {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
@@ -159,12 +150,6 @@
 }
 .hero-avatar-canvas:active { cursor: grabbing; }
 .hero-avatar-canvas.is-ready { opacity: 1; }
-.hero-avatar::after {
-  content: '';
-  position: absolute; inset: -6px;
-  border-radius: 50%;
-  border: 1px solid rgba(var(--accent-rgb), .35);
-}
 
 /* ── EXPERIENCE ──────────────────────────────────────────────── */
 #experience { padding: 6rem 0; }
