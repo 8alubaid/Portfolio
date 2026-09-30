@@ -3,17 +3,22 @@
    as a real 3D voxel bust with three.js — each foreground pixel
    becomes a small extruded cube, tinted its source color, bulging
    forward toward the center for a sculpted-relief look rather than
-   a flat plane. Click-and-drag (or touch-drag) turns it, clamped to
-   a natural viewing range since it's a relief (not a full sphere —
-   there's nothing to see around the back), with a gentle idle sway
-   and a little drag momentum, echoing the hero globe's interaction.
+   a flat plane. It rests at a fixed 3/4-turned pose (DEFAULT_YAW) —
+   no idle animation of its own — on a soft glowing pedestal that
+   stays put while the bust turns above it. Click-and-drag (or
+   touch-drag) turns it, clamped to a natural viewing range since
+   it's a relief (not a full sphere — there's nothing to see around
+   the back), with a little drag momentum. The render loop only runs
+   while something's actually moving; once a drag settles it stops
+   rendering entirely, rather than looping forever for a static scene.
 
-   Rendered unlit (MeshBasicMaterial, no lights in the scene) so
-   every block shows its exact sampled color from the source image —
-   no lighting/shading to tint or darken it — and there's no backing
-   plate of any kind: a fully transparent canvas with nothing behind
-   it but the hero's own background, so if the bust doesn't render
-   there's genuinely nothing there (no fallback image by design).
+   Rendered unlit (MeshBasicMaterial, no lights on the bust) so every
+   block shows its exact sampled color from the source image — no
+   lighting/shading to tint or darken it — and there's no backing
+   plate behind the bust itself: a fully transparent canvas with
+   nothing behind it but the hero's own background, so if the bust
+   doesn't render there's genuinely nothing there (no fallback image
+   by design).
 
    Progressive enhancement only: if the CDN import fails, WebGL is
    unsupported, or the data file is missing, this quietly does
@@ -48,6 +53,9 @@
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   if ('outputColorSpace' in renderer) renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  const rootStyle = getComputedStyle(document.documentElement);
+  const accent2Rgb = rootStyle.getPropertyValue('--accent2-rgb').trim() || '240, 226, 160';
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
@@ -171,19 +179,50 @@
   if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   group.add(mesh);
 
+  /* ── glowing pedestal — a flat soft-edged ellipse sitting just below
+     the bust, added to the scene directly (not the rotating group) so
+     it reads as a stationary display stand the bust turns above,
+     rather than spinning along with it. ─────────────────────────── */
+  function makeGlowTexture() {
+    const size = 128;
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d');
+    const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    g.addColorStop(0, 'rgba(255,255,255,0.9)');
+    g.addColorStop(0.4, `rgba(${accent2Rgb},0.55)`);
+    g.addColorStop(1, `rgba(${accent2Rgb},0)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+    return new THREE.CanvasTexture(c);
+  }
+  const bustWidth = (maxCol - minCol + 1) * CELL;
+  const bustBottom = (centerRow - maxRow) * CELL - CELL / 2;
+  const pedestal = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 1),
+    new THREE.MeshBasicMaterial({
+      map: makeGlowTexture(),
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    })
+  );
+  pedestal.rotation.x = -Math.PI / 2;
+  pedestal.position.y = bustBottom;
+  pedestal.scale.set(bustWidth * 1.5, bustWidth * 0.55, 1);
+  scene.add(pedestal);
+
   /* ── drag-to-turn, clamped to a natural viewing range (this is a ── */
   /* ── front relief, not a full sphere — there's no back to see) ──── */
+  const DEFAULT_YAW = 0.4; // resting pose: turned a natural 3/4 rather than dead-on
   const MAX_YAW = 0.85;
   const MAX_PITCH = 0.4;
   const DRAG_SENSITIVITY = 0.006;
-  const IDLE_AMPLITUDE = 0.3;
-  const IDLE_SPEED = 0.35;
 
   let isDragging = false;
   let lastPointerX = 0, lastPointerY = 0;
   let dragOffsetX = 0, dragOffsetY = 0;
   let dragVelocityY = 0;
-  let idleClock = 0;
 
   canvas.style.pointerEvents = 'auto';
   // 'pan-y': lets a vertical touch-swipe still scroll the page past the
@@ -191,9 +230,46 @@
   canvas.style.touchAction = 'pan-y';
   canvas.dataset.cursor = 'Drag';
 
-  function applyRotation(idleYaw) {
+  function applyRotation() {
     group.rotation.x = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, dragOffsetX));
-    group.rotation.y = Math.max(-MAX_YAW, Math.min(MAX_YAW, idleYaw + dragOffsetY));
+    group.rotation.y = Math.max(-MAX_YAW, Math.min(MAX_YAW, DEFAULT_YAW + dragOffsetY));
+  }
+
+  let announced = false;
+  function reveal() {
+    if (announced) return;
+    announced = true;
+    canvas.classList.add('is-ready');
+    avatarEl.classList.add('is-ready'); // fades out the "FB" fallback text
+  }
+
+  function renderOnce() {
+    applyRotation();
+    renderer.render(scene, camera);
+    reveal();
+  }
+
+  // On-demand rendering: there's no idle animation, so the render loop
+  // (tick) only exists to coast the drag's momentum to a stop after
+  // release — every pointermove already renders directly, and once
+  // released with no residual velocity there's nothing left to animate,
+  // so nothing keeps re-rendering an unchanged frame forever.
+  let rafScheduled = false;
+  function requestTick() {
+    if (rafScheduled) return;
+    rafScheduled = true;
+    requestAnimationFrame(tick);
+  }
+
+  function tick() {
+    rafScheduled = false;
+    if (!onScreen || document.hidden) return;
+    if (Math.abs(dragVelocityY) <= 0.00005) { dragVelocityY = 0; return; } // settled — stop
+
+    dragOffsetY += dragVelocityY;
+    dragVelocityY *= 0.94;
+    renderOnce();
+    requestTick();
   }
 
   canvas.addEventListener('pointerdown', (e) => {
@@ -212,53 +288,22 @@
     dragOffsetY += dx * DRAG_SENSITIVITY;
     dragOffsetX += dy * DRAG_SENSITIVITY;
     dragVelocityY = dx * DRAG_SENSITIVITY;
-    if (reduceMotion) renderOnce();
+    renderOnce();
   });
-  window.addEventListener('pointerup', () => { isDragging = false; });
+  window.addEventListener('pointerup', () => {
+    isDragging = false;
+    if (!reduceMotion) requestTick(); // let any residual momentum coast to a stop
+  });
   window.addEventListener('pointercancel', () => { isDragging = false; });
 
   let onScreen = true;
-  new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; }, { threshold: 0 }).observe(avatarEl);
+  new IntersectionObserver(([entry]) => {
+    onScreen = entry.isIntersecting;
+    if (onScreen) requestTick(); // resume coasting if it was interrupted off-screen
+  }, { threshold: 0 }).observe(avatarEl);
 
   resize();
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', () => { resize(); renderOnce(); });
 
-  let announced = false;
-  function reveal() {
-    if (announced) return;
-    announced = true;
-    canvas.classList.add('is-ready');
-    avatarEl.classList.add('is-ready'); // fades out the "FB" fallback text
-  }
-
-  function renderOnce() {
-    applyRotation(0);
-    renderer.render(scene, camera);
-    reveal();
-  }
-
-  if (reduceMotion) {
-    renderOnce();
-    return; // no rAF loop — no autonomous motion, drag still works on demand
-  }
-
-  function tick() {
-    requestAnimationFrame(tick);
-    if (!onScreen || document.hidden) return;
-
-    idleClock += 0.016;
-    const idleYaw = isDragging ? 0 : Math.sin(idleClock * IDLE_SPEED) * IDLE_AMPLITUDE;
-
-    if (!isDragging && Math.abs(dragVelocityY) > 0.00005) {
-      dragOffsetY += dragVelocityY;
-      dragVelocityY *= 0.94;
-    } else if (!isDragging) {
-      dragVelocityY = 0;
-    }
-
-    applyRotation(idleYaw);
-    renderer.render(scene, camera);
-    reveal();
-  }
-  tick();
+  renderOnce(); // always show the resting pose immediately, motion or not
 })();
