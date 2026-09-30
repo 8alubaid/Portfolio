@@ -48,56 +48,6 @@
       .catch(() => {});
   });
 
-  /* ── avatar pixel-art render (home only, all devices): turns the
-     same photo into a low-res mosaic portrait, each cell shaded for
-     a raised-tile look. Runs before the fine-pointer gate below since
-     it's a static render, not a hover interaction. ───────────────── */
-  const heroAvatarEl = document.getElementById('heroAvatar');
-  const avatarCanvas = document.getElementById('heroAvatarCanvas');
-  const avatarImg = heroAvatarEl ? heroAvatarEl.querySelector('img') : null;
-  if (heroAvatarEl && avatarCanvas && avatarImg) {
-    const GRID = 26;
-    const SIZE = 400;
-    const cell = SIZE / GRID;
-
-    const renderPixelArt = (img) => {
-      const off = document.createElement('canvas');
-      off.width = GRID; off.height = GRID;
-      const octx = off.getContext('2d');
-      const side = Math.min(img.naturalWidth, img.naturalHeight);
-      const sx = (img.naturalWidth - side) / 2;
-      const sy = (img.naturalHeight - side) / 2;
-      octx.drawImage(img, sx, sy, side, side, 0, 0, GRID, GRID);
-      const { data } = octx.getImageData(0, 0, GRID, GRID);
-
-      avatarCanvas.width = SIZE;
-      avatarCanvas.height = SIZE;
-      const ctx = avatarCanvas.getContext('2d');
-      ctx.clearRect(0, 0, SIZE, SIZE);
-      const pad = cell * 0.07;
-      for (let y = 0; y < GRID; y++) {
-        for (let x = 0; x < GRID; x++) {
-          const i = (y * GRID + x) * 4;
-          const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3] / 255;
-          if (a < 0.05) continue;
-          const px = x * cell, py = y * cell;
-          const grad = ctx.createLinearGradient(px, py, px + cell, py + cell);
-          grad.addColorStop(0, `rgba(${Math.min(255, r + 30)},${Math.min(255, g + 30)},${Math.min(255, b + 30)},${a})`);
-          grad.addColorStop(1, `rgba(${Math.max(0, r - 30)},${Math.max(0, g - 30)},${Math.max(0, b - 30)},${a})`);
-          ctx.fillStyle = grad;
-          ctx.fillRect(px + pad, py + pad, cell - pad * 2, cell - pad * 2);
-        }
-      }
-      avatarCanvas.classList.add('is-ready');
-    };
-
-    if (avatarImg.complete && avatarImg.naturalWidth) {
-      renderPixelArt(avatarImg);
-    } else {
-      avatarImg.addEventListener('load', () => renderPixelArt(avatarImg));
-    }
-  }
-
   /* ── custom cursor (fine pointers only) ──────────────────── */
   const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   if (!isFinePointer) return;
@@ -132,7 +82,7 @@
     window.addEventListener('mousedown', () => ring.classList.add('is-down'));
     window.addEventListener('mouseup', () => ring.classList.remove('is-down'));
 
-    document.querySelectorAll('a, button, .hero-canvas').forEach((el) => {
+    document.querySelectorAll('a, button, .hero-canvas, .hero-avatar-canvas').forEach((el) => {
       el.addEventListener('mouseenter', () => {
         ring.classList.add('is-link');
         if (label) label.textContent = el.dataset.cursor || (el.classList.contains('project-card') ? 'View' : '');
@@ -173,20 +123,6 @@
       glow.style.transform = `translate(${restX}%, -50%)`;
     });
   });
-
-  /* ── avatar tilt (home only) ──────────────────────────────── */
-  const avatar = document.getElementById('heroAvatar');
-  if (avatar) {
-    avatar.addEventListener('mousemove', (e) => {
-      const r = avatar.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width - 0.5;
-      const py = (e.clientY - r.top) / r.height - 0.5;
-      avatar.style.transform = `perspective(900px) rotateX(${-py * 14}deg) rotateY(${px * 14}deg)`;
-    });
-    avatar.addEventListener('mouseleave', () => {
-      avatar.style.transform = 'perspective(900px) rotateX(0) rotateY(0)';
-    });
-  }
 
   /* ── project-card cursor-following glow + 3D tilt + photo parallax ── */
   document.querySelectorAll('.project-card').forEach((card) => {

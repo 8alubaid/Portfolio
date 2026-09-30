@@ -257,6 +257,6 @@ footer {
     opacity: 1 !important;
   }
   .section-label::after { animation: none; }
-  .hero-canvas { transition: none; }
+  .hero-canvas, .hero-avatar-canvas { transition: none; }
   .hero-bg-video, .media-video { display: none; }
 }
