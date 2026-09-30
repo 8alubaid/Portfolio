@@ -296,15 +296,23 @@
   // the page — skipped under reduced motion (ambient motion from a mere
   // mouse move isn't something that mode should trigger) and while an
   // active drag already owns the rotation.
+  //
+  // Measured from the avatar's own on-screen position, not the window —
+  // it sits off to the right side of the hero, not window-center, so
+  // normalizing against window size made it look rotated rightward even
+  // with the pointer right on top of it (window-center != avatar-center).
+  // REACH is how far (in px) from the avatar's center the pointer has to
+  // get before the bust reaches its full rotation clamp.
+  const REACH = 450;
   window.addEventListener('mousemove', (e) => {
     if (reduceMotion) return;
-    const px = (e.clientX / window.innerWidth) * 2 - 1;
-    const py = (e.clientY / window.innerHeight) * 2 - 1;
-    targetYaw = Math.max(-1, Math.min(1, px)) * MAX_YAW;
-    // same sign as drag's dy handling below (pointer down -> positive) —
-    // this was previously negated, which is what made vertical tracking
-    // run backwards from the pointer
-    targetPitch = Math.max(-1, Math.min(1, py)) * MAX_PITCH;
+    const r = avatarEl.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const px = Math.max(-1, Math.min(1, (e.clientX - cx) / REACH));
+    const py = Math.max(-1, Math.min(1, (e.clientY - cy) / REACH));
+    targetYaw = px * MAX_YAW;
+    targetPitch = py * MAX_PITCH;
     if (!isDragging) { hasInteracted = true; requestTick(); }
   });
 
