@@ -12,7 +12,8 @@ Usage:
 Source data:
   - World country outlines: johan/world.geo.json (MIT)
   - US state outlines: PublicaMundi/MappingAPI (US Census-derived, public domain)
-Both fetched fresh each run from GitHub — no extra dependency beyond the
+  - US county outlines: plotly/datasets geojson-counties-fips.json (US Census-derived, public domain)
+All fetched fresh each run from GitHub — no extra dependency beyond the
 standard library.
 """
 import json
@@ -22,6 +23,7 @@ import urllib.request
 
 WORLD_SOURCE_URL = "https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json"
 US_STATES_SOURCE_URL = "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"
+US_COUNTIES_SOURCE_URL = "https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json"
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORLD_OUT = os.path.join(REPO_ROOT, "js", "world-data.js")
 HIGHLIGHT_OUT = os.path.join(REPO_ROOT, "js", "highlight-data.js")
@@ -45,9 +47,18 @@ REGION_TARGETS = {
     "Colorado": "colorado",
 }
 
+# US counties to break out the same way, keyed by (state FIPS, county name)
+# since county names repeat across states (there's more than one "Boulder").
+# Rendered into the same REGION_RINGS bucket as REGION_TARGETS above — outline
+# only, no glow. Add an entry here to outline another county.
+COUNTY_TARGETS = {
+    ("08", "Boulder"): "boulder_county",
+}
+
 WORLD_TOLERANCE = 0.35   # degrees — coarse, sized for a small decorative globe
 HIGHLIGHT_TOLERANCE = 0.12  # finer, since it's only a couple of countries
 REGION_TOLERANCE = 0.05  # finer still — a single state, mostly straight borders
+COUNTY_TOLERANCE = 0.01  # finer yet — a county spans under a degree of lat/lon
 WORLD_MIN_AREA = 0.4     # skip tiny islands/specks below this bbox-area (sq degrees)
 HIGHLIGHT_MIN_AREA = 0.5
 
@@ -160,6 +171,24 @@ def main():
             if flat:
                 region_rings[key].append(flat)
 
+    print(f"Fetching {US_COUNTIES_SOURCE_URL} ...")
+    with urllib.request.urlopen(US_COUNTIES_SOURCE_URL) as resp:
+        counties_data = json.loads(resp.read().decode("utf-8"))
+
+    for feature in counties_data["features"]:
+        props = feature.get("properties", {})
+        target_key = (props.get("STATE"), props.get("NAME"))
+        if target_key not in COUNTY_TARGETS:
+            continue
+        key = COUNTY_TARGETS[target_key]
+        geom = feature["geometry"]
+        polys = geom["coordinates"] if geom["type"] == "MultiPolygon" else [geom["coordinates"]]
+        for poly in polys:
+            exterior = poly[0]
+            flat = simplify_ring(exterior, COUNTY_TOLERANCE)
+            if flat:
+                region_rings.setdefault(key, []).append(flat)
+
     for key, rings in region_rings.items():
         print(f"region[{key}] rings: {len(rings)}  points: {sum(len(r)//2 for r in rings)}")
 
@@ -197,12 +226,14 @@ def main():
         f.write(highlight_js)
 
     region_js = (
-        "/* Outline-only region borders (US states/provinces) — brighter than\n"
-        "   the world borders, but no glow, since these nest inside a country\n"
-        "   that's often already highlighted. Source: US Census-derived state\n"
-        "   boundaries via PublicaMundi/MappingAPI (public domain). To outline\n"
-        "   another state/province, add it to REGION_TARGETS in\n"
-        "   scripts/generate-map-data.py and re-run that script. */\n"
+        "/* Outline-only region borders (US states/provinces and counties) —\n"
+        "   brighter than the world borders, but no glow, since these nest\n"
+        "   inside a country that's often already highlighted. Source: US\n"
+        "   Census-derived boundaries via PublicaMundi/MappingAPI (states) and\n"
+        "   plotly/datasets geojson-counties-fips.json (counties), both public\n"
+        "   domain. To outline another state/province or county, add it to\n"
+        "   REGION_TARGETS or COUNTY_TARGETS in scripts/generate-map-data.py\n"
+        "   and re-run that script. */\n"
         "export const REGION_RINGS = {\n"
     )
     for key, rings in region_rings.items():

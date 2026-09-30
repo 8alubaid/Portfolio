@@ -163,7 +163,7 @@
     highlightGlows.push(glow);
   });
 
-  /* ── outlined regions (states/provinces) — bright outline, no glow ── */
+  /* ── outlined regions (states/provinces, counties) — bright outline, no glow ── */
   Object.keys(REGION_RINGS).forEach((key) => {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(ringsToSegments(REGION_RINGS[key], 1.008), 3));
