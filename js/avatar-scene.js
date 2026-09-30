@@ -64,12 +64,12 @@
 
   /* ── build the voxel bust, centered on the actual portrait's ──── */
   /* ── bounding box (not the full grid, which has empty margin) ─── */
-  const CELL = 0.55;
+  const CELL = 0.38;
   const GAP_SCALE = 1.01; // >1: a hair of overlap, not a gap — flush faces can
                           // z-fight at the seam without it, which reads as a
                           // flickering gap even though none is there
-  const BASE_DEPTH = 0.4;
-  const BULGE = 1.4; // extra forward push at the bust's center
+  const BASE_DEPTH = 0.27;
+  const BULGE = 0.96; // extra forward push at the bust's center
 
   let minCol = Infinity, maxCol = -Infinity, minRow = Infinity, maxRow = -Infinity;
   AVATAR_VOXELS.forEach(([c, r]) => {

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generates js/avatar-data.js and favicon.png from img/avatar-source.jpg — the
+Generates js/avatar-data.js and favicon.png from img/avatar-source.png — the
 pixel-art portrait rendered as a real 3D voxel bust on the homepage hero
 avatar (see js/avatar-scene.js) and, cropped to just the face, as the site
 favicon. Run this only if you replace the source image or want to change the
@@ -18,18 +18,20 @@ import os
 from PIL import Image, ImageDraw
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SOURCE_IMAGE = os.path.join(REPO_ROOT, "img", "avatar-source.jpg")
+SOURCE_IMAGE = os.path.join(REPO_ROOT, "img", "avatar-source.png")
 DATA_OUT = os.path.join(REPO_ROOT, "js", "avatar-data.js")
 FAVICON_OUT = os.path.join(REPO_ROOT, "favicon.png")
 
-GRID = 16            # voxel grid resolution (cols == rows) — deliberately coarse
-                      # for bold, distinct Minecraft-style blocks rather than a
-                      # fine pixel mosaic
-BG_TOLERANCE = 110   # color-distance threshold to treat a cell as background
-                      # (deliberately high — JPEG compression leaves a soft
-                      # cream halo around the silhouette edge that a low
-                      # threshold misses, showing up as a fringe of stray
-                      # background-colored voxels)
+# 21 is this source image's actual native pixel-art resolution, not a
+# stylistic choice — confirmed by downsampling to candidate grid sizes and
+# upscaling back with nearest-neighbor: only exact divisors of the source's
+# 336x336 that line up with the art's real pixel boundaries (21, 42, 84...)
+# reconstruct with zero error, and 21 is the coarsest of those. Any other
+# grid size would cut across the art's real pixel blocks and blur colors at
+# the boundaries. If you swap in a different source image, re-derive this —
+# don't just reuse 21.
+GRID = 21
+ALPHA_THRESHOLD = 128  # a cell below this average alpha counts as background
 FAVICON_SIZE = 256          # output resolution (browsers scale down as needed)
 FAVICON_BG = (9, 9, 15)     # matches --bg in css/base.css
 FAVICON_RADIUS_FRAC = 0.25  # corner rounding, matches the old favicon.svg's rx=8/32
@@ -75,20 +77,14 @@ def generate_favicon(img, is_bg_at):
     top = max(0, (min_row - pad_rows) * cell_h)
     right = min(img.width, (max_col + 1 + pad_cols) * cell_w)
     bottom = min(img.height, (max_row + 1 + pad_rows) * cell_h)
-    face = img.crop((left, top, right, bottom))
+    face = img.crop((left, top, right, bottom)).convert("RGB")
 
-    # cut the background out of the crop too (same grid classification the
-    # voxel bust uses), replacing it with the badge color instead of the
-    # source photo's own cream backdrop showing through
-    bg_mask = Image.new("L", (GRID, GRID), 0)
-    for row in range(GRID):
-        for col in range(GRID):
-            if not is_bg_at(col, row):
-                bg_mask.putpixel((col, row), 255)
-    bg_mask_full = bg_mask.resize(img.size, Image.NEAREST)
-    bg_mask_crop = bg_mask_full.crop((left, top, right, bottom))
+    # cut the background out using the source's own alpha channel, replacing
+    # it with the badge color instead of transparency showing through as black
+    alpha_full = img.split()[3]
+    alpha_crop = alpha_full.crop((left, top, right, bottom))
     face_cutout = Image.new("RGB", face.size, FAVICON_BG)
-    face_cutout.paste(face, (0, 0), bg_mask_crop)
+    face_cutout.paste(face, (0, 0), alpha_crop)
     face = face_cutout
 
     # letterbox the (non-square) crop onto a square canvas before the resize,
@@ -116,32 +112,30 @@ def generate_favicon(img, is_bg_at):
 
 
 def main():
-    img = Image.open(SOURCE_IMAGE).convert("RGB")
+    img = Image.open(SOURCE_IMAGE).convert("RGBA")
     small = img.resize((GRID, GRID), Image.BOX)
 
-    bg = small.getpixel((0, 0))
-
-    def is_bg(px):
-        return sum((a - b) ** 2 for a, b in zip(px, bg)) ** 0.5 < BG_TOLERANCE
+    def is_bg(col, row):
+        return small.getpixel((col, row))[3] < ALPHA_THRESHOLD
 
     voxels = []
     for row in range(GRID):
         for col in range(GRID):
-            px = small.getpixel((col, row))
-            if is_bg(px):
+            if is_bg(col, row):
                 continue
-            voxels.append((col, row, px[0], px[1], px[2]))
+            r, g, b, _a = small.getpixel((col, row))
+            voxels.append((col, row, r, g, b))
 
-    generate_favicon(img, lambda c, r: is_bg(small.getpixel((c, r))))
+    generate_favicon(img, is_bg)
 
     js = (
         "/* Voxel data for the homepage hero avatar's 3D pixel-art bust\n"
-        "   (js/avatar-scene.js). Generated from img/avatar-source.jpg by\n"
-        "   scripts/generate-avatar-data.py — background cells (matched by\n"
-        "   color distance from the top-left corner pixel) are omitted so\n"
-        "   the bust renders as a cutout, not a solid block. Colors are the\n"
-        "   exact sampled RGB from the source — avatar-scene.js renders them\n"
-        "   unlit (MeshBasicMaterial) so nothing here gets tinted by scene\n"
+        "   (js/avatar-scene.js). Generated from img/avatar-source.png by\n"
+        "   scripts/generate-avatar-data.py — background cells (the source's\n"
+        "   own alpha channel, not a color guess) are omitted so the bust\n"
+        "   renders as a cutout, not a solid block. Colors are the exact\n"
+        "   sampled RGB from the source — avatar-scene.js renders them unlit\n"
+        "   (MeshBasicMaterial) so nothing here gets tinted by scene\n"
         "   lighting. Regenerate with that script if you replace the source\n"
         "   image. */\n"
         f"export const AVATAR_GRID = {{ cols: {GRID}, rows: {GRID} }};\n"
