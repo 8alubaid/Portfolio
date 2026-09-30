@@ -80,7 +80,51 @@
   });
   const centerCol = (minCol + maxCol) / 2;
   const centerRow = (minRow + maxRow) / 2;
-  const halfSpan = Math.max(maxCol - minCol, maxRow - minRow) / 2;
+
+  /* ── split the bust into head vs. shoulders/neck, so each gets its own
+     bulge instead of one falloff centered on the whole figure — that made
+     the head read as flatter than it should (its own radius is small next
+     to the wider shoulders) and the shoulders taper away to nothing at
+     their outer edges instead of reading as a solid rounded slab. Found
+     by scanning row widths for the biggest jump in the lower half of the
+     bust — that's where the silhouette flares out into the shoulders. ── */
+  const rowSpans = new Map();
+  AVATAR_VOXELS.forEach(([c, r]) => {
+    const e = rowSpans.get(r) || { min: Infinity, max: -Infinity };
+    e.min = Math.min(e.min, c);
+    e.max = Math.max(e.max, c);
+    rowSpans.set(r, e);
+  });
+  const sortedRows = [...rowSpans.keys()].sort((a, b) => a - b);
+  let splitRow = sortedRows[sortedRows.length - 1];
+  let bestJump = -Infinity;
+  for (let i = 1; i < sortedRows.length; i++) {
+    const row = sortedRows[i];
+    if (row < centerRow) continue; // shoulders are always in the lower half
+    const prevSpan = rowSpans.get(sortedRows[i - 1]);
+    const span = rowSpans.get(row);
+    const jump = (span.max - span.min) - (prevSpan.max - prevSpan.min);
+    if (jump > bestJump) { bestJump = jump; splitRow = row; }
+  }
+
+  function bbox(predicate) {
+    let lo = Infinity, hi = -Infinity, loR = Infinity, hiR = -Infinity;
+    AVATAR_VOXELS.forEach(([c, r]) => {
+      if (!predicate(r)) return;
+      if (c < lo) lo = c;
+      if (c > hi) hi = c;
+      if (r < loR) loR = r;
+      if (r > hiR) hiR = r;
+    });
+    return { minCol: lo, maxCol: hi, minRow: loR, maxRow: hiR };
+  }
+  const head = bbox((r) => r < splitRow);
+  const headCenterCol = (head.minCol + head.maxCol) / 2;
+  const headCenterRow = (head.minRow + head.maxRow) / 2;
+  const headHalfSpan = Math.max(head.maxCol - head.minCol, head.maxRow - head.minRow) / 2;
+  const body = bbox((r) => r >= splitRow);
+  const bodyCenterCol = (body.minCol + body.maxCol) / 2;
+  const bodyHalfWidth = (body.maxCol - body.minCol) / 2;
 
   const group = new THREE.Group();
   scene.add(group);
@@ -92,9 +136,20 @@
   const color = new THREE.Color();
 
   AVATAR_VOXELS.forEach(([col, row, r, g, b], i) => {
-    const dx = (col - centerCol) / halfSpan;
-    const dy = (row - centerRow) / halfSpan;
-    const dist = Math.min(1, Math.sqrt(dx * dx + dy * dy));
+    let dist;
+    if (row < splitRow) {
+      // head: full 2D radial falloff, scaled to the head's own size —
+      // a rounded dome rather than a flat plane
+      const dx = (col - headCenterCol) / headHalfSpan;
+      const dy = (row - headCenterRow) / headHalfSpan;
+      dist = Math.sqrt(dx * dx + dy * dy);
+    } else {
+      // shoulders/neck: horizontal falloff only (no vertical component),
+      // so the whole band bulges as one solid rounded slab instead of
+      // tapering to flat toward the bottom edge
+      dist = Math.abs((col - bodyCenterCol) / bodyHalfWidth);
+    }
+    dist = Math.min(1, dist);
     const depth = BASE_DEPTH + BULGE * Math.cos((dist * Math.PI) / 2);
 
     const x = (col - centerCol) * CELL;
