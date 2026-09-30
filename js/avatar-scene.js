@@ -3,14 +3,20 @@
    as a real 3D voxel bust with three.js — each foreground pixel
    becomes a small extruded cube, tinted its source color, bulging
    forward toward the center for a sculpted-relief look rather than
-   a flat plane. It rests at a fixed 3/4-turned pose (DEFAULT_YAW) —
-   no idle animation of its own — on a soft glowing pedestal that
-   stays put while the bust turns above it. Click-and-drag (or
-   touch-drag) turns it, clamped to a natural viewing range since
-   it's a relief (not a full sphere — there's nothing to see around
-   the back), with a little drag momentum. The render loop only runs
-   while something's actually moving; once a drag settles it stops
-   rendering entirely, rather than looping forever for a static scene.
+   a flat plane. It sits on a soft glowing pedestal that stays put
+   while the bust turns above it.
+
+   The bust turns to face the pointer, anywhere on the page, eased
+   rather than snapping — until the pointer moves it just rests at a
+   fixed 3/4-turned pose (DEFAULT_YAW). Click/touch-drag overrides
+   that directly, continuing smoothly from wherever it currently is;
+   releasing hands control back to pointer-following, easing on from
+   the drag's end position toward the live pointer target rather than
+   jumping. Rotation is clamped to a natural viewing range since it's
+   a relief (not a full sphere — there's nothing to see around the
+   back). The render loop only runs while the eased position hasn't
+   caught up to its target yet (or while dragging); once it settles,
+   rendering stops rather than looping forever for an unchanged frame.
 
    Rendered unlit (MeshBasicMaterial, no lights on the bust) so every
    block shows its exact sampled color from the source image — no
@@ -212,17 +218,24 @@
   pedestal.scale.set(bustWidth * 1.5, bustWidth * 0.55, 1);
   scene.add(pedestal);
 
-  /* ── drag-to-turn, clamped to a natural viewing range (this is a ── */
-  /* ── front relief, not a full sphere — there's no back to see) ──── */
-  const DEFAULT_YAW = 0.4; // resting pose: turned a natural 3/4 rather than dead-on
+  /* ── follows the pointer (eased), clamped to a natural viewing range ── */
+  /* ── (this is a front relief, not a full sphere — nothing to see    ── */
+  /* ── around the back) — click/touch-drag overrides it directly.     ── */
+  const DEFAULT_YAW = 0.4; // resting pose before any pointer/drag input: a natural 3/4 turn
   const MAX_YAW = 0.85;
   const MAX_PITCH = 0.4;
   const DRAG_SENSITIVITY = 0.006;
+  const PARALLAX_EASE = 0.08;
 
   let isDragging = false;
+  let hasInteracted = false; // once true, the fixed DEFAULT_YAW is no longer used
   let lastPointerX = 0, lastPointerY = 0;
   let dragOffsetX = 0, dragOffsetY = 0;
-  let dragVelocityY = 0;
+  // starts at DEFAULT_YAW (not 0) so that on touch devices — no mousemove
+  // ever fires there to set a real target — releasing a drag eases back to
+  // the resting pose instead of snapping toward a meaningless dead-center
+  let targetYaw = DEFAULT_YAW, targetPitch = 0;
+  let parallaxYaw = DEFAULT_YAW, parallaxPitch = 0; // eased toward targetYaw/targetPitch
 
   canvas.style.pointerEvents = 'auto';
   // 'pan-y': lets a vertical touch-swipe still scroll the page past the
@@ -231,8 +244,13 @@
   canvas.dataset.cursor = 'Drag';
 
   function applyRotation() {
-    group.rotation.x = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, dragOffsetX));
-    group.rotation.y = Math.max(-MAX_YAW, Math.min(MAX_YAW, DEFAULT_YAW + dragOffsetY));
+    if (isDragging) {
+      group.rotation.x = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, dragOffsetX));
+      group.rotation.y = Math.max(-MAX_YAW, Math.min(MAX_YAW, DEFAULT_YAW + dragOffsetY));
+    } else {
+      group.rotation.x = parallaxPitch;
+      group.rotation.y = hasInteracted ? parallaxYaw : DEFAULT_YAW;
+    }
   }
 
   let announced = false;
@@ -249,11 +267,10 @@
     reveal();
   }
 
-  // On-demand rendering: there's no idle animation, so the render loop
-  // (tick) only exists to coast the drag's momentum to a stop after
-  // release — every pointermove already renders directly, and once
-  // released with no residual velocity there's nothing left to animate,
-  // so nothing keeps re-rendering an unchanged frame forever.
+  // On-demand rendering: the loop only runs while the eased parallax
+  // hasn't caught up to the pointer's current target yet (or while
+  // dragging), and stops the moment it settles rather than re-rendering
+  // an unchanged frame forever.
   let rafScheduled = false;
   function requestTick() {
     if (rafScheduled) return;
@@ -261,22 +278,42 @@
     requestAnimationFrame(tick);
   }
 
+  function stepParallax() {
+    parallaxYaw += (targetYaw - parallaxYaw) * PARALLAX_EASE;
+    parallaxPitch += (targetPitch - parallaxPitch) * PARALLAX_EASE;
+    return Math.abs(targetYaw - parallaxYaw) > 0.0015 || Math.abs(targetPitch - parallaxPitch) > 0.0015;
+  }
+
   function tick() {
     rafScheduled = false;
     if (!onScreen || document.hidden) return;
-    if (Math.abs(dragVelocityY) <= 0.00005) { dragVelocityY = 0; return; } // settled — stop
-
-    dragOffsetY += dragVelocityY;
-    dragVelocityY *= 0.94;
+    const needsMore = !isDragging && hasInteracted && stepParallax();
     renderOnce();
-    requestTick();
+    if (isDragging || needsMore) requestTick();
   }
 
+  // Passive: the bust turns to face wherever the pointer is, anywhere on
+  // the page — skipped under reduced motion (ambient motion from a mere
+  // mouse move isn't something that mode should trigger) and while an
+  // active drag already owns the rotation.
+  window.addEventListener('mousemove', (e) => {
+    if (reduceMotion) return;
+    const px = (e.clientX / window.innerWidth) * 2 - 1;
+    const py = (e.clientY / window.innerHeight) * 2 - 1;
+    targetYaw = Math.max(-1, Math.min(1, px)) * MAX_YAW;
+    targetPitch = Math.max(-1, Math.min(1, -py)) * MAX_PITCH;
+    if (!isDragging) { hasInteracted = true; requestTick(); }
+  });
+
+  // Direct: click/touch-drag overrides the pointer-follow temporarily,
+  // continuing smoothly from wherever it currently is rather than
+  // snapping to DEFAULT_YAW first.
   canvas.addEventListener('pointerdown', (e) => {
     isDragging = true;
     lastPointerX = e.clientX;
     lastPointerY = e.clientY;
-    dragVelocityY = 0;
+    dragOffsetY = group.rotation.y - DEFAULT_YAW;
+    dragOffsetX = group.rotation.x;
     try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
   });
   window.addEventListener('pointermove', (e) => {
@@ -287,19 +324,25 @@
     lastPointerY = e.clientY;
     dragOffsetY += dx * DRAG_SENSITIVITY;
     dragOffsetX += dy * DRAG_SENSITIVITY;
-    dragVelocityY = dx * DRAG_SENSITIVITY;
     renderOnce();
   });
   window.addEventListener('pointerup', () => {
+    if (!isDragging) return;
     isDragging = false;
-    if (!reduceMotion) requestTick(); // let any residual momentum coast to a stop
+    hasInteracted = true;
+    // hand back to pointer-following smoothly from exactly where the
+    // drag left off, rather than jumping to the live pointer target
+    parallaxYaw = Math.max(-MAX_YAW, Math.min(MAX_YAW, DEFAULT_YAW + dragOffsetY));
+    parallaxPitch = Math.max(-MAX_PITCH, Math.min(MAX_PITCH, dragOffsetX));
+    if (!reduceMotion) requestTick(); // ease on from there toward the current pointer position
+    else renderOnce(); // reduced motion: just hold exactly where the drag left it
   });
   window.addEventListener('pointercancel', () => { isDragging = false; });
 
   let onScreen = true;
   new IntersectionObserver(([entry]) => {
     onScreen = entry.isIntersecting;
-    if (onScreen) requestTick(); // resume coasting if it was interrupted off-screen
+    if (onScreen) requestTick(); // resume easing if it was interrupted off-screen
   }, { threshold: 0 }).observe(avatarEl);
 
   resize();
