@@ -301,7 +301,10 @@
     const px = (e.clientX / window.innerWidth) * 2 - 1;
     const py = (e.clientY / window.innerHeight) * 2 - 1;
     targetYaw = Math.max(-1, Math.min(1, px)) * MAX_YAW;
-    targetPitch = Math.max(-1, Math.min(1, -py)) * MAX_PITCH;
+    // same sign as drag's dy handling below (pointer down -> positive) —
+    // this was previously negated, which is what made vertical tracking
+    // run backwards from the pointer
+    targetPitch = Math.max(-1, Math.min(1, py)) * MAX_PITCH;
     if (!isDragging) { hasInteracted = true; requestTick(); }
   });
 
