@@ -21,7 +21,9 @@ SOURCE_IMAGE = os.path.join(REPO_ROOT, "img", "avatar-source.jpg")
 DATA_OUT = os.path.join(REPO_ROOT, "js", "avatar-data.js")
 FALLBACK_OUT = os.path.join(REPO_ROOT, "img", "avatar-pixelart.png")
 
-GRID = 40            # voxel grid resolution (cols == rows)
+GRID = 24            # voxel grid resolution (cols == rows) — deliberately coarse
+                      # for bold, distinct Minecraft-style blocks rather than a
+                      # fine pixel mosaic
 BG_TOLERANCE = 110   # color-distance threshold to treat a cell as background
                       # (deliberately high — JPEG compression leaves a soft
                       # cream halo around the silhouette edge that a low
