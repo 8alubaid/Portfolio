@@ -23,6 +23,16 @@
   will-change: transform;
 }
 
+.hero-bg-video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0.22;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .hero-canvas {
   position: absolute; inset: 0;
   width: 100%; height: 100%;

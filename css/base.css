@@ -258,4 +258,5 @@ footer {
   }
   .section-label::after { animation: none; }
   .hero-canvas { transition: none; }
+  .hero-bg-video, .media-video { display: none; }
 }
