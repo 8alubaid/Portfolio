@@ -180,6 +180,32 @@
     </div>
   </section>
 
+  <!-- CHESS — latest game, replayed on scroll (js/chess-replay.js). Stays
+       hidden until the game loads, so a blocked/offline Chess.com API just
+       means the section never appears. -->
+  <section id="chess" class="reveal" hidden aria-labelledby="chessTitle">
+    <div class="container">
+      <div class="section-label">Off the Clock</div>
+      <h2 id="chessTitle">Latest Game</h2>
+      <div class="chess-card">
+        <div class="chess-board-wrap">
+          <div class="chess-player" id="chessTop"></div>
+          <div class="chess-board" id="chessBoard" role="img" aria-label="Chess board replaying the last moves of my most recent game"></div>
+          <div class="chess-player" id="chessBottom"></div>
+        </div>
+        <div class="chess-info">
+          <div class="chess-result" id="chessResult" aria-live="polite"></div>
+          <ol class="chess-moves" id="chessMoves" aria-label="Last moves of the game"></ol>
+          <p class="chess-meta" id="chessMeta"></p>
+          <div class="chess-actions">
+            <button type="button" class="btn btn-outline magnetic" id="chessReplay">↻ Replay</button>
+            <a class="btn btn-outline magnetic" id="chessLink" target="_blank" rel="noopener">View on Chess.com ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CONTACT -->
   <section id="contact">
     <div class="container">
@@ -206,6 +232,7 @@
   <script src="js/main.js"></script>
   <script src="js/hero-scene.js"></script>
   <script src="js/avatar-scene.js"></script>
+  <script src="js/chess-replay.js"></script>
 
 </body>
 </html>

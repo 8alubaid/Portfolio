@@ -349,6 +349,162 @@ a.project-card {
 .project-card:hover .project-open { color: var(--accent2); gap: 0.8rem; }
 .project-card:hover .project-open::after { transform: translateX(4px); }
 
+/* ── CHESS (latest game, replayed on scroll) ─────────────────── */
+#chess {
+  padding: 6rem 0;
+  --chess-light: #cdb97a;
+  --chess-dark: #7d6b36;
+  --chess-loss: #e0907f;
+}
+
+.chess-card {
+  display: grid;
+  grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+  gap: 2rem 2.6rem;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.6rem;
+}
+
+.chess-board-wrap { display: flex; flex-direction: column; gap: 0.65rem; min-width: 0; }
+
+.chess-player {
+  display: flex; align-items: center; gap: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  min-height: 1.5rem;
+}
+.chess-player .chess-swatch {
+  width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.chess-player .chess-swatch.w { background: #f4ead0; }
+.chess-player .chess-swatch.b { background: #1b1710; border-color: rgba(255, 255, 255, 0.4); }
+.chess-player .chess-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chess-player .chess-rating { color: var(--muted); }
+.chess-player .chess-tag {
+  margin-left: auto;
+  font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--bg); background: var(--accent);
+  padding: 0.18rem 0.5rem; border-radius: 4px;
+  opacity: 0; transform: translateY(2px);
+  transition: opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s;
+}
+.chess-player.is-winner .chess-tag { opacity: 1; transform: none; }
+
+.chess-board {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  user-select: none; -webkit-user-select: none;
+}
+.chess-sq { position: relative; }
+.chess-sq.l { background: var(--chess-light); }
+.chess-sq.d { background: var(--chess-dark); }
+/* from/to of the move that just played */
+.chess-sq.is-last::before {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(255, 238, 120, 0.5);
+}
+/* the king in check after a move that gives it */
+.chess-sq.is-check::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(circle, rgba(232, 70, 54, 0.85) 0%, rgba(232, 70, 54, 0) 72%);
+}
+.chess-coord {
+  position: absolute; z-index: 1;
+  font-family: var(--mono); font-size: 0.55rem; font-weight: 700; line-height: 1;
+  pointer-events: none;
+}
+.chess-coord.r { top: 3px; left: 3px; }
+.chess-coord.f { bottom: 3px; right: 3px; }
+.chess-sq.l .chess-coord { color: var(--chess-dark); }
+.chess-sq.d .chess-coord { color: var(--chess-light); }
+
+.chess-pieces { position: absolute; inset: 0; pointer-events: none; }
+.chess-piece {
+  position: absolute; left: 0; top: 0;
+  width: 12.5%; height: 12.5%;
+  /* flex-aligned instead of padded: percentage padding resolves against the
+     board's width, not the piece's, which crushed the sprite to a few px */
+  display: flex; align-items: flex-end; justify-content: center;
+  transition: transform 0.8s cubic-bezier(0.3, 0.8, 0.25, 1), opacity 0.4s ease;
+  will-change: transform;
+}
+.chess-piece.is-moving { z-index: 3; }
+.chess-piece.is-captured { opacity: 0; }
+.chess-piece svg { width: 92%; height: 94%; display: block; margin-bottom: 3%; transition: transform 0.4s ease; }
+.chess-piece.is-captured svg { transform: scale(0.45) rotate(14deg); }
+.chess-piece.w .f { fill: #f4ead0; } .chess-piece.w .s { fill: #c9b98a; }
+.chess-piece.w .h { fill: #ffffff; } .chess-piece.w .o { fill: #1a1608; }
+.chess-piece.b .f { fill: #3a3329; } .chess-piece.b .s { fill: #221d16; }
+.chess-piece.b .h { fill: #5a5043; } .chess-piece.b .o { fill: #0b0a07; }
+
+.chess-info { min-width: 0; }
+.chess-result {
+  padding-bottom: 1.2rem; margin-bottom: 1.2rem;
+  border-bottom: 1px solid var(--border);
+}
+.chess-result-title {
+  display: block;
+  font-family: var(--display);
+  font-size: clamp(1.2rem, 2.8vw, 1.55rem);
+  font-weight: 800; letter-spacing: -0.02em; line-height: 1.2;
+  color: var(--muted);
+  transition: color 0.5s ease;
+  overflow-wrap: break-word; /* break at spaces first; only split a long name if it truly can't fit */
+}
+.chess-result-detail {
+  display: block; margin-top: 0.35rem;
+  font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted);
+}
+.chess-result.is-win .chess-result-title { color: var(--accent2); }
+.chess-result.is-loss .chess-result-title { color: var(--chess-loss); }
+.chess-result.is-draw .chess-result-title { color: var(--text); }
+
+.chess-moves {
+  list-style: none; margin: 0 0 1.2rem; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+}
+.chess-move {
+  display: inline-flex; align-items: baseline; gap: 0.4rem;
+  font-family: var(--mono); font-size: 0.8rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border); border-radius: 6px;
+  color: var(--muted);
+  transition: color 0.3s, border-color 0.3s, background 0.3s;
+}
+.chess-move .num { font-size: 0.7rem; opacity: 0.7; }
+.chess-move.is-played { color: var(--text); }
+.chess-move.is-current {
+  color: var(--accent2); border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.1);
+}
+
+.chess-meta {
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.04em; line-height: 1.8;
+  color: var(--muted); margin: 0 0 1.4rem;
+}
+.chess-actions { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+.chess-actions .btn { font-size: 0.78rem; padding: 0.65rem 1.2rem; }
+
+@media (max-width: 720px) {
+  .chess-card { grid-template-columns: minmax(0, 1fr); padding: 1.1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chess-piece, .chess-piece svg, .chess-player .chess-tag { transition: none !important; }
+}
+
 /* ── CONTACT ─────────────────────────────────────────────────── */
 #contact { padding: 6rem 0 5rem; }
 

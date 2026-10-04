@@ -10,6 +10,7 @@ No framework, no build step — static HTML/CSS/JS designed to load instantly an
 
 - **Live, click-and-drag WebGL globe** — an interactive [three.js](https://threejs.org/) globe rendered in the hero: real country border outlines, drifting in a slow ambient spin and easing toward the pointer. Click (or touch) and drag to take direct control and spin it yourself, with a bit of momentum on release — auto-spin pauses while dragging and picks back up after. The United States and Saudi Arabia are drawn with a brighter outline and a soft pulsing glow, and two exact locations are marked — Jeddah, Saudi Arabia (raised & born) and Boulder, Colorado (Bachelor's degree) — connected by an arc with traveling pulses, each with a floating label that fades out as the globe's rotation carries it out of view. Loaded via dynamic `import()` so a blocked/offline CDN just quietly falls back to the CSS glow underneath — the hero never breaks.
 - **3D voxel avatar bust** — the hero avatar is a pixel-art portrait extruded into real 3D: another [three.js](https://threejs.org/) scene (`js/avatar-scene.js`) turns each foreground pixel into a small colored cube, bulging forward toward the center for a sculpted-relief look. Click/touch-and-drag turns it within a natural viewing range, with the same drag-and-momentum feel as the globe. See [3D Avatar Bust](#3d-avatar-bust) below.
+- **Live chess replay** — my most recent finished [Chess.com](https://www.chess.com/member/Anas433) game, pulled straight from their public API on every load (so it updates itself — no editing after a game). The board sits in the position just before the game's last 3 moves; when the section scrolls into view those moves play out with sliding pixel-art pieces, then it reveals who won and how. See [Latest Chess Game](#latest-chess-game) below.
 - **Photo-forward 3D project cards** — each card leads with a cover photo that tilts in perspective toward the pointer (`rotateX`/`rotateY`) while the photo *inside* parallax-shifts the opposite way and scales up, plus a diagonal glossy light-sweep on hover — a convincing depth illusion built from nothing but CSS custom properties and one mousemove listener. Missing a cover photo yet? Falls back to a branded placeholder, no broken images. Prev/next pagination cards get the same tilt treatment.
 - **3D scroll-reveal** — sections tilt up out of a slight `rotateX` and fade in via `IntersectionObserver` as they enter the viewport, staggered per item.
 - **Custom cursor** — a trailing ring + dot that grows and labels itself over links, cards, and buttons; falls back to the native cursor on touch devices and when `prefers-reduced-motion` is set.
@@ -52,7 +53,8 @@ Website/
 │   ├── highlight-data.js  # Finer-detail outlines + centroids for the USA/Saudi Arabia highlight
 │   ├── region-data.js     # Colorado's state outline
 │   ├── avatar-scene.js    # three.js voxel-bust scene for the hero avatar (index.html only)
-│   └── avatar-data.js     # Generated per-pixel voxel positions/colors for the avatar bust
+│   ├── avatar-data.js     # Generated per-pixel voxel positions/colors for the avatar bust
+│   └── chess-replay.js    # Latest Chess.com game → scroll-triggered replay of its last moves
 ├── scripts/
 │   ├── generate-map-data.py    # Regenerates the three globe data files above from source datasets
 │   └── generate-avatar-data.py # Regenerates js/avatar-data.js from a source portrait
@@ -157,6 +159,19 @@ Degrades the same way as the globe — CDN/WebGL failures are caught silently (n
 
 To swap in a different portrait: replace `img/avatar-source.png` (needs real alpha transparency) and re-run `python scripts/generate-avatar-data.py` — regenerates both the voxel bust and the favicon. See `img/avatar-README.md`.
 
+## Latest Chess Game
+
+`js/chess-replay.js` fills the `#chess` section (between Projects and Contact) with my most recent finished Chess.com game:
+
+- **Live data, no key**: it reads `api.chess.com/pub/player/<user>/games/archives`, takes the newest monthly archive (looking back up to 3 months if a month has nothing usable), and picks the most recent standard-chess game that parses and has at least one move. Chess.com's API sends `Access-Control-Allow-Origin: *`, so this is a plain browser `fetch`. Its responses are only cached for ~5 seconds, so the chosen game is also kept in `localStorage` for 10 minutes — repeat visitors don't re-hit the API on every load.
+- **Chess logic**: PGN parsing and move generation come from [chess.js](https://github.com/jhlywa/chess.js) (BSD-2), loaded via dynamic `import()` from unpkg like three.js. Each move comes back with its from/to squares and flags, which is everything the animation needs — normal moves slide, captures fade out (en passant removes the pawn *behind* the destination square, not on it), castling slides the rook too, promotions swap the sprite on arrival, and a move that gives check puts a red glow on the king. My side of the board is always at the bottom.
+- **Pixel-art pieces**: drawn in the file as 11×12 silhouettes (`SPRITES`) and turned into inline SVG at runtime — the outline, right-edge shade and left-edge highlight are derived automatically, so a piece is just its shape. They match the pixel-art avatar, and unlike Unicode chess glyphs (which render differently, and sometimes as emoji, depending on the device) they look identical everywhere.
+- **Playback**: the board starts at the position before the last `REPLAY_PLIES` (3) moves — these count single moves by either side, so change it to 6 for "3 full moves". An `IntersectionObserver` starts the replay once the board is 55% in view, plays once, and the result (winner, and how: checkmate / resignation / timeout / abandonment, or draw reason) is revealed at the end rather than up front. The Replay button runs it again.
+- **What shows**: both usernames and ratings (the opponent's name is shown on purpose), time control, date, rated/casual, the opening name, and a link to the game on Chess.com. Everything from the API is written with `textContent`, and the link is only used if it points at `https://www.chess.com/`.
+- **Degrades to nothing**: the section is `hidden` in the HTML and only revealed once a game has loaded and the board is built. If the API is down or rate-limited, the CDN is blocked, or no usable game turns up, it simply never appears. `prefers-reduced-motion` skips the autoplay — the board lands on the final position with the result shown, and Replay steps through the moves without sliding.
+
+To point it at a different account, change `USERNAME` at the top of the file. Notes: only standard chess is shown (variants like Chess960 or bughouse are skipped), and the "latest game" is whatever finished most recently — a loss or an abandoned game included — it isn't filtered.
+
 ## Adding a New Project
 
 1. Duplicate `project-3.html` and rename it (e.g. `project-5.html`).
@@ -224,4 +239,4 @@ and deployment" run — that's the real error log.
 
 ## License
 
-Site code (HTML/CSS/JS structure) is free to reference or adapt for your own portfolio — attribution appreciated. Personal content (bio, project write-ups, photos) is © Faris Balubaid and not for reuse. Fonts are served under their respective open-source licenses via Google Fonts (Syne, DM Sans, DM Mono — all OFL). [three.js](https://github.com/mrdoob/three.js) is MIT-licensed. Country border data in `js/world-data.js` and `js/highlight-data.js` is simplified from [johan/world.geo.json](https://github.com/johan/world.geo.json) (MIT); the Colorado outline in `js/region-data.js` is simplified from [PublicaMundi/MappingAPI](https://github.com/PublicaMundi/MappingAPI)'s US Census-derived state boundaries (public domain).
+Site code (HTML/CSS/JS structure) is free to reference or adapt for your own portfolio — attribution appreciated. Personal content (bio, project write-ups, photos) is © Faris Balubaid and not for reuse. Fonts are served under their respective open-source licenses via Google Fonts (Syne, DM Sans, DM Mono — all OFL). [three.js](https://github.com/mrdoob/three.js) is MIT-licensed, and [chess.js](https://github.com/jhlywa/chess.js) is BSD-2-Clause. Game data in the chess section comes from [Chess.com's public API](https://www.chess.com/news/view/published-data-api). Country border data in `js/world-data.js` and `js/highlight-data.js` is simplified from [johan/world.geo.json](https://github.com/johan/world.geo.json) (MIT); the Colorado outline in `js/region-data.js` is simplified from [PublicaMundi/MappingAPI](https://github.com/PublicaMundi/MappingAPI)'s US Census-derived state boundaries (public domain).
