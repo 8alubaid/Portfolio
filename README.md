@@ -29,7 +29,7 @@ No framework, no build step — static HTML/CSS/JS designed to load instantly an
 | Styling    | Vanilla CSS3 — custom properties as design tokens, Grid/Flexbox   |
 | Behavior   | Vanilla JS (ES6+) for everything except the hero scene            |
 | 3D         | [three.js](https://threejs.org/) r160, loaded from the unpkg CDN via dynamic `import()` — the one external script dependency in the project, and it's optional: see [3D Hero Scene](#3d-hero-scene) below |
-| Type       | [Syne](https://fonts.google.com/specimen/Syne) (display), [DM Sans](https://fonts.google.com/specimen/DM+Sans) (body), [DM Mono](https://fonts.google.com/specimen/DM+Mono) (labels/mono), via Google Fonts |
+| Type       | [Inter](https://fonts.google.com/specimen/Inter) for everything — headings, body, and labels — as a single variable font (weights 300–800, with its optical-size axis so large headings automatically get Inter's tighter "display" cut), via Google Fonts. See [Typography](#typography) |
 | Build      | None — open the HTML files directly or serve statically           |
 
 ## Project Structure
@@ -107,14 +107,26 @@ All shared values live as CSS custom properties at the top of `css/base.css`:
 --accent2:   #f0e2a0;   /* pale champagne gold, hover/emphasis */
 --text:      #e2e2f0;   /* body text */
 --muted:     #8a8aa8;   /* secondary text (tuned for AA contrast) */
---mono:      'DM Mono', monospace;   /* labels, tags, dates */
---display:   'Syne', sans-serif;     /* headings */
---body:      'DM Sans', sans-serif;  /* paragraphs */
+--font:      'Inter', system-ui, ...; /* the one typeface for everything */
+--mono:      var(--font);            /* small labels, tags, dates, buttons */
+--display:   var(--font);            /* headings */
+--body:      var(--font);            /* paragraphs */
 --radius:    12px;
 --max:       860px;      /* content column width */
 ```
 
 Change a token once in `base.css` and it propagates everywhere — no per-page overrides to hunt down.
+
+### Typography
+
+Everything is set in **Inter**. The three font tokens (`--mono`, `--display`, `--body`) all point at the same `--font` stack on purpose: each rule still says which *role* its text plays, so it can be tuned for that role without touching the family. That tuning matters because Inter isn't a drop-in for the previous mix (a wide display face plus a monospace for labels):
+
+- **Headings** use weight 600–700 with tight negative tracking (`-0.03em` to `-0.045em` at the large sizes) rather than the old 800 — Inter at 800 looks heavy and generic. The `opsz` axis makes the browser pick the tighter display cut automatically at large sizes (`font-optical-sizing: auto`).
+- **Small uppercase labels** (section labels, hero tag, "View project", pills) keep wide tracking (~`0.08–0.14em`) but at weight 600 so they hold up at small sizes.
+- **Lowercase small text** that used a monospace with generous letter-spacing (nav links, buttons, tags, dates, chess move chips) now uses ~0 tracking at weight 500 — monospace-style spacing looks loose in a proportional face.
+- **Inline `<code>`** also uses Inter (it used to fall back to the browser's default monospace), tinted so it still reads as code.
+
+The one place the old fonts remain is `project-4.html` — the unlinked draft described under Known Issues, which carries its own copy of the tokens and wasn't touched.
 
 Reusable components defined in `base.css` and used across pages: `.btn` / `.btn-outline`, `.section-label`, `.tag` / `.project-tags`, `.exp-bullets` (arrow list), `.magnetic`, `.reveal`.
 
@@ -241,4 +253,4 @@ and deployment" run — that's the real error log.
 
 ## License
 
-Site code (HTML/CSS/JS structure) is free to reference or adapt for your own portfolio — attribution appreciated. Personal content (bio, project write-ups, photos) is © Faris Balubaid and not for reuse. Fonts are served under their respective open-source licenses via Google Fonts (Syne, DM Sans, DM Mono — all OFL). [three.js](https://github.com/mrdoob/three.js) is MIT-licensed, and [chess.js](https://github.com/jhlywa/chess.js) is BSD-2-Clause. Game data in the chess section comes from [Chess.com's public API](https://www.chess.com/news/view/published-data-api). Country border data in `js/world-data.js` and `js/highlight-data.js` is simplified from [johan/world.geo.json](https://github.com/johan/world.geo.json) (MIT); the Colorado outline in `js/region-data.js` is simplified from [PublicaMundi/MappingAPI](https://github.com/PublicaMundi/MappingAPI)'s US Census-derived state boundaries (public domain).
+Site code (HTML/CSS/JS structure) is free to reference or adapt for your own portfolio — attribution appreciated. Personal content (bio, project write-ups, photos) is © Faris Balubaid and not for reuse. The Inter typeface is served via Google Fonts under the SIL Open Font License. [three.js](https://github.com/mrdoob/three.js) is MIT-licensed, and [chess.js](https://github.com/jhlywa/chess.js) is BSD-2-Clause. Game data in the chess section comes from [Chess.com's public API](https://www.chess.com/news/view/published-data-api). Country border data in `js/world-data.js` and `js/highlight-data.js` is simplified from [johan/world.geo.json](https://github.com/johan/world.geo.json) (MIT); the Colorado outline in `js/region-data.js` is simplified from [PublicaMundi/MappingAPI](https://github.com/PublicaMundi/MappingAPI)'s US Census-derived state boundaries (public domain).

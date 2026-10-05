@@ -24,8 +24,9 @@
 .project-num-big {
   font-family: var(--mono);
   font-size: 0.78rem;
+  font-weight: 600;
   color: var(--accent);
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: 1.2rem;
   display: flex; align-items: center; gap: 0.6rem;
@@ -36,9 +37,9 @@
 .project-name {
   font-family: var(--display);
   font-size: clamp(2.2rem, 6vw, 4rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
   max-width: 760px;
   margin-bottom: 1.2rem;
   animation: fadeUp .6s ease both; animation-delay: .2s;
@@ -60,7 +61,7 @@
 }
 .status-pill {
   display: inline-flex; align-items: center; gap: 0.6rem;
-  font-family: var(--mono); font-size: 0.76rem;
+  font-family: var(--mono); font-size: 0.76rem; font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--accent2);
   background: var(--surface);
@@ -77,7 +78,7 @@
   animation: pulse 2s infinite;
 }
 .category-pill {
-  font-family: var(--mono); font-size: 0.76rem;
+  font-family: var(--mono); font-size: 0.76rem; font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--muted);
   background: transparent;
@@ -128,6 +129,7 @@
   color: var(--muted);
   font-family: var(--mono);
   font-size: 0.72rem;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-align: center;
@@ -166,8 +168,8 @@
   gap: 0.6rem;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
+  font-size: 0.85rem;
+  letter-spacing: 0;
   text-align: center;
   padding: 1.5rem;
 }
@@ -206,10 +208,10 @@
 }
 .pagination-link.next { text-align: right; align-items: flex-end; }
 .pagination-label {
-  font-family: var(--mono); font-size: 0.68rem;
-  color: var(--accent); letter-spacing: 0.14em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+  color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase;
 }
-.pagination-title { font-family: var(--display); font-weight: 700; font-size: 1rem; }
+.pagination-title { font-family: var(--display); font-weight: 600; font-size: 1.02rem; letter-spacing: -0.015em; }
 
 /* ── RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width: 680px) {

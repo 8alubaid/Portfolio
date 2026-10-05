@@ -14,9 +14,14 @@
   --accent2-rgb: 240, 226, 160;
   --text:      #e2e2f0;
   --muted:     #8a8aa8;
-  --mono:      'DM Mono', monospace;
-  --display:   'Syne', sans-serif;
-  --body:      'DM Sans', sans-serif;
+  /* One family, Inter, for everything. The three tokens are kept (rather than
+     collapsed into one) so each rule still says which *role* the text plays —
+     labels, headings, body — and can be tuned per role (weight, tracking)
+     without touching the family. */
+  --font:      'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --mono:      var(--font);   /* small labels, tags, dates, buttons */
+  --display:   var(--font);   /* headings */
+  --body:      var(--font);   /* paragraphs */
   --radius:    12px;
   --max:       860px;
 }
@@ -29,6 +34,9 @@ body {
   font-family: var(--body);
   font-size: 16px;
   line-height: 1.65;
+  font-optical-sizing: auto; /* Inter's opsz axis: a tighter "display" cut at large sizes */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
@@ -83,7 +91,7 @@ body.has-cursor .hero-canvas { cursor: none; }
 .cursor-ring.is-down { transform: translate(-50%, -50%) scale(0.85); }
 .cursor-label {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--accent2); opacity: 0; transform: scale(0.6);
   transition: opacity .25s, transform .25s; white-space: nowrap;
 }
@@ -102,9 +110,10 @@ body.has-cursor .hero-canvas { cursor: none; }
 .nav-logo {
   display: inline-flex; align-items: center; gap: 0.55rem;
   font-family: var(--mono);
-  font-size: 0.85rem;
+  font-size: 0.92rem;
+  font-weight: 600;
   color: var(--accent2);
-  letter-spacing: 0.08em;
+  letter-spacing: -0.01em;
   text-decoration: none;
 }
 .nav-status-dot {
@@ -116,8 +125,8 @@ body.has-cursor .hero-canvas { cursor: none; }
 }
 .nav-links { display: flex; gap: 2rem; list-style: none; }
 .nav-links a {
-  font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
-  text-decoration: none; letter-spacing: 0.06em; transition: color .2s;
+  font-family: var(--mono); font-size: 0.86rem; font-weight: 500; color: var(--muted);
+  text-decoration: none; letter-spacing: 0; transition: color .2s;
 }
 .nav-links a:hover { color: var(--text); }
 
@@ -128,8 +137,9 @@ section { position: relative; z-index: 1; }
 .section-label {
   font-family: var(--mono);
   font-size: 0.72rem;
+  font-weight: 600;
   color: var(--accent);
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   margin-bottom: 2.5rem;
   display: flex; align-items: center; gap: 1rem;
@@ -150,8 +160,8 @@ section { position: relative; z-index: 1; }
 h2 {
   font-family: var(--display);
   font-size: clamp(1.8rem, 4vw, 2.8rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   line-height: 1.1;
   margin-bottom: 3rem;
 }
@@ -159,8 +169,9 @@ h2 {
 /* ── BUTTONS ─────────────────────────────────────────────────── */
 .btn {
   font-family: var(--mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0;
   padding: 0.7rem 1.5rem;
   border-radius: 6px;
   text-decoration: none;
@@ -188,13 +199,26 @@ h2 {
 .project-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .tag {
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.74rem;
+  font-weight: 500;
   color: var(--accent2);
   background: rgba(var(--accent-rgb), .1);
   border: 1px solid rgba(var(--accent-rgb), .2);
   padding: 0.2rem 0.6rem;
   border-radius: 4px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.01em;
+}
+
+/* inline code: same family as everything else (it used to fall back to the
+   browser's default monospace), tinted so it still reads as code */
+code {
+  font-family: var(--font);
+  font-size: 0.92em;
+  font-weight: 500;
+  color: var(--accent2);
+  background: rgba(var(--accent-rgb), .1);
+  padding: 0.08em 0.4em;
+  border-radius: 4px;
 }
 
 /* ── SCROLL-REVEAL (generic) ────────────────────────────────── */
@@ -213,7 +237,7 @@ footer {
   justify-content: space-between;
   align-items: center;
   font-family: var(--mono);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   color: var(--muted);
   position: relative; z-index: 1;
 }

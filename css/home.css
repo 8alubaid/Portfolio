@@ -60,8 +60,9 @@
   position: absolute; top: 0; left: 0;
   display: flex; align-items: center; gap: 0.4rem;
   font-family: var(--mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   color: var(--accent2);
   background: rgba(9, 9, 15, 0.55);
   border: 1px solid rgba(var(--accent-rgb), 0.3);
@@ -91,8 +92,9 @@
 .hero-tag {
   font-family: var(--mono);
   font-size: 0.78rem;
+  font-weight: 600;
   color: var(--accent);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-bottom: 1.2rem;
   display: flex; align-items: center; gap: 0.6rem;
@@ -102,9 +104,9 @@
 .hero-name {
   font-family: var(--display);
   font-size: clamp(3rem, 8vw, 5.5rem);
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1.02;
   margin-bottom: 0.5rem;
 }
 
@@ -112,6 +114,7 @@
   font-family: var(--display);
   font-size: clamp(1.1rem, 3vw, 1.6rem);
   font-weight: 600;
+  letter-spacing: -0.015em;
   color: var(--accent2);
   margin-bottom: 1.5rem;
 }
@@ -134,7 +137,7 @@
   display: flex; align-items: center; justify-content: center;
   font-family: var(--display);
   font-size: 3rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--accent2);
   flex-shrink: 0;
   position: relative;
@@ -171,9 +174,10 @@
 
 .exp-date {
   font-family: var(--mono);
-  font-size: 0.72rem;
+  font-size: 0.82rem;
+  font-weight: 500;
   color: var(--muted);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.01em;
   padding-top: 0.2rem;
 }
 
@@ -193,15 +197,17 @@
 .exp-company {
   font-family: var(--display);
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--text);
   margin-bottom: 0.2rem;
 }
 .exp-role {
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: 0.84rem;
+  font-weight: 500;
   color: var(--accent);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.01em;
 }
 
 /* ── PROJECTS ────────────────────────────────────────────────── */
@@ -254,16 +260,18 @@ a.project-card {
 
 .project-num {
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
+  font-weight: 600;
   color: var(--accent);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   margin-bottom: 1rem;
   position: relative; z-index: 1;
 }
 .project-title {
   font-family: var(--display);
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.12rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
   margin-bottom: 0.7rem;
   color: var(--text);
   position: relative; z-index: 1;
@@ -336,9 +344,10 @@ a.project-card {
 }
 .project-open {
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
+  font-weight: 600;
   color: var(--muted);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   margin-top: 1.4rem;
   display: flex; align-items: center; gap: 0.5rem;
@@ -374,8 +383,9 @@ a.project-card {
 .chess-player {
   display: flex; align-items: center; gap: 0.7rem;
   font-family: var(--mono);
-  font-size: 0.8rem;
-  letter-spacing: 0.04em;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
   color: var(--text);
   min-height: 40px;
 }
@@ -392,7 +402,7 @@ a.project-card {
 .chess-avatar-fallback {
   display: flex; align-items: center; justify-content: center;
   border: 1px solid var(--border);
-  font-family: var(--display); font-size: 1.15rem; font-weight: 800; line-height: 1;
+  font-family: var(--display); font-size: 1.15rem; font-weight: 700; line-height: 1;
   color: var(--accent2); text-transform: uppercase;
 }
 /* which color they played — a small badge on the avatar's corner */
@@ -405,10 +415,10 @@ a.project-card {
 .chess-player .chess-swatch.w { background: #fbfbf6; }
 .chess-player .chess-swatch.b { background: #2b2825; border-color: rgba(255, 255, 255, 0.4); }
 .chess-player .chess-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chess-player .chess-rating { color: var(--muted); }
+.chess-player .chess-rating { color: var(--muted); font-weight: 500; }
 .chess-player .chess-tag {
   margin-left: auto;
-  font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase;
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--bg); background: var(--accent);
   padding: 0.18rem 0.5rem; border-radius: 4px;
   opacity: 0; transform: translateY(2px);
@@ -480,14 +490,14 @@ a.project-card {
   display: block;
   font-family: var(--display);
   font-size: clamp(1.2rem, 2.8vw, 1.55rem);
-  font-weight: 800; letter-spacing: -0.02em; line-height: 1.2;
+  font-weight: 700; letter-spacing: -0.025em; line-height: 1.2;
   color: var(--muted);
   transition: color 0.5s ease;
   overflow-wrap: break-word; /* break at spaces first; only split a long name if it truly can't fit */
 }
 .chess-result-detail {
   display: block; margin-top: 0.35rem;
-  font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 0.76rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--muted);
 }
 .chess-result.is-win .chess-result-title { color: var(--accent2); }
@@ -500,7 +510,8 @@ a.project-card {
 }
 .chess-move {
   display: inline-flex; align-items: baseline; gap: 0.4rem;
-  font-family: var(--mono); font-size: 0.8rem;
+  font-family: var(--mono); font-size: 0.88rem; font-weight: 500;
+  font-variant-numeric: tabular-nums;
   padding: 0.4rem 0.75rem;
   border: 1px solid var(--border); border-radius: 6px;
   color: var(--muted);
@@ -514,11 +525,11 @@ a.project-card {
 }
 
 .chess-meta {
-  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.04em; line-height: 1.8;
+  font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0; line-height: 1.8;
   color: var(--muted); margin: 0 0 1.4rem;
 }
 .chess-actions { display: flex; flex-wrap: wrap; gap: 0.8rem; }
-.chess-actions .btn { font-size: 0.78rem; padding: 0.65rem 1.2rem; }
+.chess-actions .btn { font-size: 0.84rem; padding: 0.65rem 1.2rem; }
 
 @media (max-width: 720px) {
   .chess-card { grid-template-columns: minmax(0, 1fr); padding: 1.1rem; }
@@ -546,8 +557,9 @@ a.project-card {
 }
 .contact-link {
   font-family: var(--mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0;
   color: var(--muted);
   text-decoration: none;
   border: 1px solid var(--border);
