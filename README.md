@@ -8,18 +8,14 @@ No framework, no build step — static HTML/CSS/JS designed to load instantly an
 
 ## Features
 
-- **Live, click-and-drag WebGL globe** — an interactive [three.js](https://threejs.org/) globe rendered in the hero: real country border outlines, drifting in a slow ambient spin and easing toward the pointer. Click (or touch) and drag to take direct control and spin it yourself, with a bit of momentum on release — auto-spin pauses while dragging and picks back up after. The United States and Saudi Arabia are drawn with a brighter outline and a soft pulsing glow, and two exact locations are marked — Jeddah, Saudi Arabia (raised & born) and Boulder, Colorado (Bachelor's degree) — connected by an arc with traveling pulses, each with a floating label that fades out as the globe's rotation carries it out of view. Loaded via dynamic `import()` so a blocked/offline CDN just quietly falls back to the CSS glow underneath — the hero never breaks.
+- **Live, click-and-drag WebGL globe** — an interactive [three.js](https://threejs.org/) globe rendered in the hero: real country border outlines, drifting in a slow ambient spin and easing toward the pointer. Click (or touch) and drag to take direct control and spin it yourself, with a bit of momentum on release — auto-spin pauses while dragging and picks back up after. The United States and Saudi Arabia are drawn with a brighter outline and a soft pulsing glow, and two exact locations are marked — Jeddah, Saudi Arabia (raised & born) and Boulder, Colorado (Bachelor's degree) — connected by an arc with traveling pulses, each with a floating label that fades out as the globe's rotation carries it out of view. Loaded via dynamic `import()` so a blocked/offline CDN just quietly leaves the plain dark hero — the page never breaks.
 - **3D voxel avatar bust** — the hero avatar is a pixel-art portrait extruded into real 3D: another [three.js](https://threejs.org/) scene (`js/avatar-scene.js`) turns each foreground pixel into a small colored cube, bulging forward toward the center for a sculpted-relief look. Click/touch-and-drag turns it within a natural viewing range, with the same drag-and-momentum feel as the globe. See [3D Avatar Bust](#3d-avatar-bust) below.
 - **Live chess replay** — my most recent finished [Chess.com](https://www.chess.com/member/Anas433) game, pulled straight from their public API on every load (so it updates itself — no editing after a game). The board sits in the position just before the game's last 3 moves; when the section scrolls into view those moves play out with sliding pixel-art pieces, then it reveals who won and how. See [Latest Chess Game](#latest-chess-game) below.
-- **Photo-forward 3D project cards** — each card leads with a cover photo that tilts in perspective toward the pointer (`rotateX`/`rotateY`) while the photo *inside* parallax-shifts the opposite way and scales up, plus a diagonal glossy light-sweep on hover — a convincing depth illusion built from nothing but CSS custom properties and one mousemove listener. Missing a cover photo yet? Falls back to a branded placeholder, no broken images. Prev/next pagination cards get the same tilt treatment.
-- **3D scroll-reveal** — sections tilt up out of a slight `rotateX` and fade in via `IntersectionObserver` as they enter the viewport, staggered per item.
-- **Custom cursor** — a trailing ring + dot that grows and labels itself over links, cards, and buttons; falls back to the native cursor on touch devices and when `prefers-reduced-motion` is set.
-- **Magnetic interactions** — buttons and contact links gently pull toward the pointer.
-- **Ambient parallax glow** — a soft radial highlight in each hero that tracks the pointer.
-- **Circuit-inspired accents** — a faint dot-grid backdrop, "pad"-style section markers, and a traveling glint animation along every section divider, a nod to PCB schematics.
+- **Restrained UI around the showpieces** — the three bespoke pieces (globe, avatar bust, chess replay) carry the personality, so everything else is deliberately plain: flat bordered cards that just darken their border on hover, a quiet fade-up on scroll, section labels that are one line of ordinary text, solid colors with no glow gradients, and no decorative backdrop. Missing a project cover photo yet? The card falls back to a plain placeholder, no broken images.
+- **Custom cursor** — a trailing ring + dot that grows and labels itself ("Drag", "View") over links, cards, the globe and the avatar; falls back to the native cursor on touch devices and when `prefers-reduced-motion` is set.
 - **Case-study project pages** — each project gets its own page with an overview, role & contributions, tech stack, and a media section, not just a card.
 - **Fully responsive** — single-column collapse for nav, hero, experience, and project grid under 680px.
-- **Accessible & battery-conscious by default** — semantic sectioning, keyboard-reachable links, a `prefers-reduced-motion` path that disables the WebGL scene (renders one static frame) and every cursor/parallax/tilt effect, and the scene itself pauses rendering when the hero scrolls out of view or the tab is backgrounded.
+- **Accessible & battery-conscious by default** — semantic sectioning, keyboard-reachable links, a `prefers-reduced-motion` path that disables the WebGL scene (renders one static frame), the cursor ring, and the scroll animations, and the scene itself pauses rendering when the hero scrolls out of view or the tab is backgrounded.
 
 ## Tech Stack
 
@@ -47,7 +43,7 @@ Website/
 │   ├── home.css           # Styles unique to index.html
 │   └── project.css        # Styles unique to the project-N.html case studies
 ├── js/
-│   ├── main.js            # Cursor, magnetic buttons, 3D tilt, scroll-reveal, scroll progress
+│   ├── main.js            # Custom cursor, scroll-reveal, scroll progress, resume-button reveal
 │   ├── hero-scene.js      # three.js WebGL globe scene (index.html hero only)
 │   ├── world-data.js      # Simplified real country border outlines used by the globe
 │   ├── highlight-data.js  # Finer-detail outlines + centroids for the USA/Saudi Arabia highlight
@@ -122,13 +118,13 @@ Change a token once in `base.css` and it propagates everywhere — no per-page o
 Everything is set in **Inter**. The three font tokens (`--mono`, `--display`, `--body`) all point at the same `--font` stack on purpose: each rule still says which *role* its text plays, so it can be tuned for that role without touching the family. That tuning matters because Inter isn't a drop-in for the previous mix (a wide display face plus a monospace for labels):
 
 - **Headings** use weight 600–700 with tight negative tracking (`-0.03em` to `-0.045em` at the large sizes) rather than the old 800 — Inter at 800 looks heavy and generic. The `opsz` axis makes the browser pick the tighter display cut automatically at large sizes (`font-optical-sizing: auto`).
-- **Small uppercase labels** (section labels, hero tag, "View project", pills) keep wide tracking (~`0.08–0.14em`) but at weight 600 so they hold up at small sizes.
+- **Labels are plain text**: the section labels, hero tagline, "View project", status/category pills and similar used to be tiny wide-tracked uppercase (a common template tell); they're now ordinary sentence-case lines at weight 500 with no letter-spacing. The few places still using small caps do so only where it's functional (the cursor's "Drag" label).
 - **Lowercase small text** that used a monospace with generous letter-spacing (nav links, buttons, tags, dates, chess move chips) now uses ~0 tracking at weight 500 — monospace-style spacing looks loose in a proportional face.
 - **Inline `<code>`** also uses Inter (it used to fall back to the browser's default monospace), tinted so it still reads as code.
 
 The one place the old fonts remain is `project-4.html` — the unlinked draft described under Known Issues, which carries its own copy of the tokens and wasn't touched.
 
-Reusable components defined in `base.css` and used across pages: `.btn` / `.btn-outline`, `.section-label`, `.tag` / `.project-tags`, `.exp-bullets` (arrow list), `.magnetic`, `.reveal`.
+Reusable components defined in `base.css` and used across pages: `.btn` / `.btn-outline`, `.section-label`, `.tag` / `.project-tags`, `.exp-bullets` (dash list), `.reveal`. (`.magnetic` is left on some buttons/links only for its `display: inline-flex` layout — the pull-toward-the-pointer effect it used to carry is gone.)
 
 ## 3D Hero Scene
 
@@ -148,7 +144,7 @@ It's deliberately cheap to render (~8,100 line vertices for the world plus a few
 
 | Condition | Behavior |
 |---|---|
-| CDN unreachable / import fails / a data file is missing | Caught silently — the `<canvas>` stays transparent, the CSS radial glow underneath is the whole hero background |
+| CDN unreachable / import fails / a data file is missing | Caught silently — the `<canvas>` stays transparent, the hero is just its plain dark background |
 | WebGL unsupported | Same — `WebGLRenderer` construction is wrapped in `try/catch` |
 | `prefers-reduced-motion: reduce` | No auto-spin and no render loop — renders one static frame, but dragging still works, rendering only on each explicit input rather than continuously |
 | Hero scrolled out of view / tab backgrounded | Render loop pauses via `IntersectionObserver` + `document.hidden`, resumes automatically |
@@ -216,7 +212,7 @@ Built and tested to work the same on iPhone and Android, in any modern browser �
 - **Viewport units**: `min-height: 100svh` (accounts for mobile browser chrome/toolbars correctly) has a plain `100vh` declared right before it as a fallback for any browser that doesn't recognize `svh` — an unsupported value is ignored, not substituted, so without the fallback the hero would collapse to its content height instead of filling the screen.
 - **Touch vs. scroll on the draggable globe**: the globe's canvas covers the full hero section and captures pointer input to support drag-to-rotate. It's set to `touch-action: pan-y` rather than `none` — the difference matters: `none` would trap *every* touch starting in the hero, including a swipe meant to scroll the page, making the site feel broken/stuck on a phone. `pan-y` lets vertical swipes scroll natively while leaving horizontal swipes free for the drag handlers.
 - **Tap highlight**: `-webkit-tap-highlight-color: transparent` globally, so tapping a link/button on iOS or Android doesn't flash the browser's default gray highlight box, which would clash with the site's own hover/press styling.
-- Every interactive effect that depends on hover (custom cursor, magnetic pull, 3D card tilt) is scoped behind `(hover: hover) and (pointer: fine)` and simply doesn't run on touch devices — nothing on the site *requires* hover to function, it's all progressive enhancement on top of normal tap/click.
+- Every interactive effect that depends on hover (the custom cursor) is scoped behind `(hover: hover) and (pointer: fine)` and simply doesn't run on touch devices — nothing on the site *requires* hover to function, it's all progressive enhancement on top of normal tap/click.
 
 ## Deployment
 

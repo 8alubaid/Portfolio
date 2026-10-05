@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════════════════════════
-   Shared behavior: scroll progress, scroll-reveal, custom cursor,
-   magnetic buttons, ambient glow parallax, project-card glow.
+   Shared behavior: scroll progress, scroll-reveal, resume-button
+   reveal, and the custom cursor.
    Every selector guards for the element's existence, so this one
    file works unmodified across index.html and every project page.
    ══════════════════════════════════════════════════════════════ */
@@ -93,72 +93,4 @@
       });
     });
   }
-
-  /* ── magnetic pull ────────────────────────────────────────── */
-  document.querySelectorAll('.magnetic').forEach((el) => {
-    el.addEventListener('mousemove', (e) => {
-      const r = el.getBoundingClientRect();
-      const relX = e.clientX - r.left - r.width / 2;
-      const relY = e.clientY - r.top - r.height / 2;
-      el.style.transform = `translate(${relX * 0.3}px, ${relY * 0.3}px)`;
-    });
-    el.addEventListener('mouseleave', () => {
-      el.style.transform = 'translate(0, 0)';
-    });
-  });
-
-  /* ── ambient glow parallax (hero / project-hero) ─────────── */
-  document.querySelectorAll('.glow-section').forEach((section) => {
-    const glow = section.querySelector('.glow');
-    if (!glow) return;
-    const isHome = section.id === 'hero';
-    const restX = isHome ? -60 : -50;
-    section.addEventListener('mousemove', (e) => {
-      const r = section.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width - 0.5;
-      const py = (e.clientY - r.top) / r.height - 0.5;
-      glow.style.transform = `translate(${restX + px * 18}%, ${-50 + py * 18}%)`;
-    });
-    section.addEventListener('mouseleave', () => {
-      glow.style.transform = `translate(${restX}%, -50%)`;
-    });
-  });
-
-  /* ── project-card cursor-following glow + 3D tilt + photo parallax ── */
-  document.querySelectorAll('.project-card').forEach((card) => {
-    card.addEventListener('mousemove', (e) => {
-      const r = card.getBoundingClientRect();
-      const relX = e.clientX - r.left;
-      const relY = e.clientY - r.top;
-      const px = relX / r.width - 0.5;
-      const py = relY / r.height - 0.5;
-      card.style.setProperty('--gx', `${relX}px`);
-      card.style.setProperty('--gy', `${relY}px`);
-      card.style.setProperty('--ry', `${px * 8}deg`);
-      card.style.setProperty('--rx', `${-py * 8}deg`);
-      card.style.setProperty('--ix', `${-px * 16}px`);
-      card.style.setProperty('--iy', `${-py * 12}px`);
-    });
-    card.addEventListener('mouseleave', () => {
-      card.style.setProperty('--ry', '0deg');
-      card.style.setProperty('--rx', '0deg');
-      card.style.setProperty('--ix', '0px');
-      card.style.setProperty('--iy', '0px');
-    });
-  });
-
-  /* ── 3D cursor-tilt on pagination cards (no photo, tilt only) ── */
-  document.querySelectorAll('.pagination-link').forEach((card) => {
-    card.addEventListener('mousemove', (e) => {
-      const r = card.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width - 0.5;
-      const py = (e.clientY - r.top) / r.height - 0.5;
-      card.style.setProperty('--ry', `${px * 8}deg`);
-      card.style.setProperty('--rx', `${-py * 8}deg`);
-    });
-    card.addEventListener('mouseleave', () => {
-      card.style.setProperty('--ry', '0deg');
-      card.style.setProperty('--rx', '0deg');
-    });
-  });
 })();
