@@ -18,7 +18,7 @@
   const section = document.getElementById('chess');
   if (!section) return;
 
-  const USERNAME = 'Anas433';
+  const USERNAME = 'Balubaidd'; // if this account is ever renamed, update it — Chess.com's games endpoints look the account up by name
   const REPLAY_PLIES = 3;          // how many of the game's final moves (plies) to play out
   const MONTHS_TO_SEARCH = 3;      // how far back to look if the latest month has nothing usable
   const CHESSJS_URL = 'https://unpkg.com/chess.js@1.4.0/dist/esm/chess.js';
@@ -122,6 +122,10 @@
 
   /* ── who am I / who won / how ───────────────────────────── */
   const iAmWhite = game.white.username.toLowerCase() === USERNAME.toLowerCase();
+  const iAmBlack = game.black.username.toLowerCase() === USERNAME.toLowerCase();
+  // neither side is me (e.g. a stale cache after a username change): hide the
+  // section rather than guess a side and show the board/result from the wrong one
+  if (!iAmWhite && !iAmBlack) return;
   const me = iAmWhite ? game.white : game.black;
   const opp = iAmWhite ? game.black : game.white;
   const myColor = iAmWhite ? 'w' : 'b';
