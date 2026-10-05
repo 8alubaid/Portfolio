@@ -22,7 +22,7 @@
   const REPLAY_PLIES = 3;          // how many of the game's final moves (plies) to play out
   const MONTHS_TO_SEARCH = 3;      // how far back to look if the latest month has nothing usable
   const CHESSJS_URL = 'https://unpkg.com/chess.js@1.4.0/dist/esm/chess.js';
-  const CACHE_KEY = 'chess-latest:v1:' + USERNAME.toLowerCase();
+  const CACHE_KEY = 'chess-latest:v2:' + USERNAME.toLowerCase(); // v2: entries now carry avatar URLs
   const CACHE_MS = 10 * 60 * 1000; // the API barely caches (max-age=5), so be polite
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -83,6 +83,17 @@
     try { localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), game })); } catch (err) {}
   }
 
+  // profile picture, or '' if the player hasn't set one / the lookup fails —
+  // only ever accepted from Chess.com's own image host
+  async function fetchAvatar(username) {
+    try {
+      const profile = await getJson(`https://api.chess.com/pub/player/${username.toLowerCase()}`);
+      return /^https:\/\/images\.chesscomfiles\.com\//.test(profile.avatar || '') ? profile.avatar : '';
+    } catch (err) {
+      return '';
+    }
+  }
+
   let game = readCache();
   if (!game) {
     try {
@@ -91,6 +102,8 @@
       return; // API down / blocked / rate-limited
     }
     if (!game) return;
+    const [white, black] = await Promise.all([fetchAvatar(game.white.username), fetchAvatar(game.black.username)]);
+    game.avatars = { white, black };
     writeCache(game);
   }
 
@@ -273,10 +286,36 @@
   }
 
   /* ── players, moves, result, meta ────────────────────────── */
-  function fillPlayer(el, who, color) {
+  function fillPlayer(el, who, color, avatarUrl) {
     el.textContent = '';
+
+    // profile picture, with the piece color as a small badge on its corner;
+    // players with no picture (or one that fails to load) get an initial tile
+    const avatarWrap = document.createElement('span');
+    avatarWrap.className = 'chess-avatar-wrap';
+    const fallback = () => {
+      const tile = document.createElement('span');
+      tile.className = 'chess-avatar chess-avatar-fallback';
+      tile.textContent = who.username.charAt(0);
+      return tile;
+    };
+    if (avatarUrl) {
+      const img = document.createElement('img');
+      img.className = 'chess-avatar';
+      img.src = avatarUrl;
+      img.alt = '';
+      img.width = img.height = 40;
+      img.decoding = 'async';
+      img.referrerPolicy = 'no-referrer';
+      img.addEventListener('error', () => img.replaceWith(fallback()));
+      avatarWrap.appendChild(img);
+    } else {
+      avatarWrap.appendChild(fallback());
+    }
     const swatch = document.createElement('span');
     swatch.className = 'chess-swatch ' + color;
+    avatarWrap.appendChild(swatch);
+
     const name = document.createElement('span');
     name.className = 'chess-name';
     name.textContent = who.username;
@@ -286,12 +325,13 @@
     const tag = document.createElement('span');
     tag.className = 'chess-tag';
     tag.textContent = 'Winner';
-    el.append(swatch, name, rating, tag);
+    el.append(avatarWrap, name, rating, tag);
   }
   const topEl = document.getElementById('chessTop');
   const bottomEl = document.getElementById('chessBottom');
-  fillPlayer(topEl, opp, iAmWhite ? 'b' : 'w');
-  fillPlayer(bottomEl, me, myColor);
+  const avatars = game.avatars || {};
+  fillPlayer(topEl, opp, iAmWhite ? 'b' : 'w', iAmWhite ? avatars.black : avatars.white);
+  fillPlayer(bottomEl, me, myColor, iAmWhite ? avatars.white : avatars.black);
 
   const movesEl = document.getElementById('chessMoves');
   const chips = replayMoves.map((m, k) => {

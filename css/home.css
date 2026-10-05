@@ -372,16 +372,35 @@ a.project-card {
 .chess-board-wrap { display: flex; flex-direction: column; gap: 0.65rem; min-width: 0; }
 
 .chess-player {
-  display: flex; align-items: center; gap: 0.6rem;
+  display: flex; align-items: center; gap: 0.7rem;
   font-family: var(--mono);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   letter-spacing: 0.04em;
   color: var(--text);
-  min-height: 1.5rem;
+  min-height: 40px;
 }
+/* profile picture, square with softly rounded corners like on Chess.com */
+.chess-avatar-wrap { position: relative; width: 40px; height: 40px; flex-shrink: 0; }
+.chess-avatar {
+  display: block; width: 100%; height: 100%;
+  border-radius: 4px; object-fit: cover;
+  background: var(--bg);
+  /* faint inner edge so a dark (or pure-black) picture still reads as a tile on the dark card */
+  outline: 1px solid rgba(255, 255, 255, 0.16); outline-offset: -1px;
+}
+/* initial tile for players with no picture */
+.chess-avatar-fallback {
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border);
+  font-family: var(--display); font-size: 1.15rem; font-weight: 800; line-height: 1;
+  color: var(--accent2); text-transform: uppercase;
+}
+/* which color they played — a small badge on the avatar's corner */
 .chess-player .chess-swatch {
-  width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0;
+  position: absolute; right: -4px; bottom: -4px;
+  width: 13px; height: 13px; border-radius: 3px;
   border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 0 2px var(--surface); /* ring in the card color so it separates from the picture */
 }
 .chess-player .chess-swatch.w { background: #fbfbf6; }
 .chess-player .chess-swatch.b { background: #2b2825; border-color: rgba(255, 255, 255, 0.4); }
