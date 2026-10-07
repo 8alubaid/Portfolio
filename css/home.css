@@ -394,9 +394,10 @@ a.project-card {
   content: ''; position: absolute; inset: 0;
   background: radial-gradient(ellipse at center, #ff0000 0%, #e70000 25%, rgba(169, 0, 0, 0) 89%, rgba(158, 0, 0, 0) 100%);
 }
-/* rank/file labels sit inside the edge squares in the opposite square's color */
+/* rank/file labels sit inside the edge squares in the opposite square's color,
+   drawn over the pieces (z-index above a moving piece's 3) like on Chess.com */
 .chess-coord {
-  position: absolute; z-index: 1;
+  position: absolute; z-index: 4;
   font-family: var(--body); font-size: 0.68rem; font-weight: 700; line-height: 1;
   pointer-events: none;
 }
@@ -409,21 +410,21 @@ a.project-card {
 .chess-piece {
   position: absolute; left: 0; top: 0;
   width: 12.5%; height: 12.5%;
-  /* flex-aligned instead of padded: percentage padding resolves against the
-     board's width, not the piece's, which crushed the sprite to a few px */
-  display: flex; align-items: flex-end; justify-content: center;
-  transition: transform 0.8s cubic-bezier(0.3, 0.8, 0.25, 1), opacity 0.4s ease;
+  background: center / 100% 100% no-repeat; /* the piece image: see the .wk/.bq/… rules below */
+  z-index: 1;
+  /* like Chess.com, a piece glides in a straight line to its square (knights included) */
+  transition: transform var(--chess-slide, 350ms) ease;
   will-change: transform;
 }
-.chess-piece.is-moving { z-index: 3; }
-.chess-piece.is-captured { opacity: 0; }
-.chess-piece svg { width: 92%; height: 94%; display: block; margin-bottom: 3%; transition: transform 0.4s ease; }
-.chess-piece.is-captured svg { transform: scale(0.45) rotate(14deg); }
-/* white pieces are near-pure white (not cream) so they stay distinct from the cream squares */
-.chess-piece.w .f { fill: #fbfbf6; } .chess-piece.w .s { fill: #c8c8b8; }
-.chess-piece.w .h { fill: #ffffff; } .chess-piece.w .o { fill: #1f1d18; }
-.chess-piece.b .f { fill: #4a4642; } .chess-piece.b .s { fill: #2b2825; }
-.chess-piece.b .h { fill: #6a655f; } .chess-piece.b .o { fill: #0d0c0b; }
+.chess-piece.is-moving { z-index: 3; }      /* the mover passes over whatever it captures */
+.chess-piece.is-captured { z-index: 0; }    /* …which stays under it until it lands, then is removed */
+/* open-licensed Cburnett set (CC BY-SA 3.0) — credited under the card in index.html */
+.chess-piece.wk { background-image: url(../img/pieces/wk.svg); } .chess-piece.bk { background-image: url(../img/pieces/bk.svg); }
+.chess-piece.wq { background-image: url(../img/pieces/wq.svg); } .chess-piece.bq { background-image: url(../img/pieces/bq.svg); }
+.chess-piece.wr { background-image: url(../img/pieces/wr.svg); } .chess-piece.br { background-image: url(../img/pieces/br.svg); }
+.chess-piece.wb { background-image: url(../img/pieces/wb.svg); } .chess-piece.bb { background-image: url(../img/pieces/bb.svg); }
+.chess-piece.wn { background-image: url(../img/pieces/wn.svg); } .chess-piece.bn { background-image: url(../img/pieces/bn.svg); }
+.chess-piece.wp { background-image: url(../img/pieces/wp.svg); } .chess-piece.bp { background-image: url(../img/pieces/bp.svg); }
 
 .chess-info { min-width: 0; }
 .chess-result {
@@ -448,30 +449,58 @@ a.project-card {
 .chess-result.is-loss .chess-result-title { color: var(--chess-loss); }
 .chess-result.is-draw .chess-result-title { color: var(--text); }
 
+/* the move list, laid out like Chess.com's: number | White | Black */
 .chess-moves {
   list-style: none; margin: 0 0 1.2rem; padding: 0;
-  display: flex; flex-wrap: wrap; gap: 0.5rem;
+  border: 1px solid var(--border); border-radius: 8px;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+.chess-row { display: grid; grid-template-columns: 3rem minmax(0, 1fr) minmax(0, 1fr); }
+.chess-row:nth-child(even) { background: rgba(255, 255, 255, 0.025); }
+.chess-row .num {
+  display: flex; align-items: center;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem; font-weight: 500;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.035);
+  border-right: 1px solid var(--border);
 }
 .chess-move {
-  display: inline-flex; align-items: baseline; gap: 0.4rem;
-  font-family: var(--mono); font-size: 0.88rem; font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  padding: 0.4rem 0.75rem;
-  border: 1px solid var(--border); border-radius: 6px;
+  display: flex; align-items: center;
+  min-height: 2.5rem; padding: 0.45rem 0.85rem;
+  font-size: 0.95rem; font-weight: 600;
   color: var(--muted);
-  transition: color 0.3s, border-color 0.3s, background 0.3s;
+  transition: color 0.3s, background 0.3s;
 }
-.chess-move .num { font-size: 0.7rem; opacity: 0.7; }
+.chess-move.is-gap { font-weight: 500; opacity: 0.5; }
 .chess-move.is-played { color: var(--text); }
-.chess-move.is-current {
-  color: var(--accent2); border-color: var(--accent);
-  background: rgba(var(--accent-rgb), 0.1);
+.chess-move.is-current { color: var(--accent2); background: rgba(var(--accent-rgb), 0.16); }
+/* piece icon standing in for the SAN letter; the white piece reads on the dark card */
+.chess-fig {
+  display: inline-block; flex-shrink: 0;
+  width: 1.35em; height: 1.35em; margin: -0.2em 0.04em -0.2em -0.1em;
+  background: center / contain no-repeat;
+  opacity: 0.55; transition: opacity 0.3s;
 }
+.chess-move.is-played .chess-fig, .chess-move.is-current .chess-fig { opacity: 1; }
+.chess-fig.k { background-image: url(../img/pieces/wk.svg); }
+.chess-fig.q { background-image: url(../img/pieces/wq.svg); }
+.chess-fig.r { background-image: url(../img/pieces/wr.svg); }
+.chess-fig.b { background-image: url(../img/pieces/wb.svg); }
+.chess-fig.n { background-image: url(../img/pieces/wn.svg); }
 
 .chess-meta {
   font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0; line-height: 1.8;
   color: var(--muted); margin: 0 0 1.4rem;
 }
+.chess-credit {
+  margin: 0.9rem 0 0;
+  font-size: 0.74rem; line-height: 1.5;
+  color: var(--muted);
+}
+.chess-credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.chess-credit a:hover { color: var(--text); }
 .chess-actions { display: flex; flex-wrap: wrap; gap: 0.8rem; }
 .chess-actions .btn { font-size: 0.84rem; padding: 0.65rem 1.2rem; }
 
@@ -479,7 +508,7 @@ a.project-card {
   .chess-card { grid-template-columns: minmax(0, 1fr); padding: 1.1rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .chess-piece, .chess-piece svg, .chess-player .chess-tag { transition: none !important; }
+  .chess-piece, .chess-player .chess-tag { transition: none !important; }
 }
 
 /* ── CONTACT ─────────────────────────────────────────────────── */

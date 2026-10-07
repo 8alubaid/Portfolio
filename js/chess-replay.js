@@ -2,13 +2,17 @@
    Latest chess game: pulls my most recent finished Chess.com game
    from their public API (no key; CORS-enabled), puts the board in
    the position just before the last few moves, and when the section
-   scrolls into view plays those moves out on a pixel-art board —
-   then reveals who won and how. Replay button runs it again.
+   scrolls into view plays those moves out the way Chess.com's own
+   board does — pieces slide square to square, a captured piece
+   disappears as the capturer lands, the from/to squares light up
+   yellow, a checked king glows red — then reveals who won and how.
+   Replay button runs it again.
 
    Chess rules/PGN parsing come from chess.js (BSD-2), loaded from
-   the CDN via dynamic import() like three.js. The pieces are drawn
-   here as pixel-art silhouettes (shaded + outlined automatically),
-   not Unicode glyphs, so they look identical on every device.
+   the CDN via dynamic import() like three.js. The pieces are the
+   open-licensed Cburnett set (img/pieces/, CC BY-SA 3.0) — Chess.com's
+   own piece art is proprietary — and are plain SVG files, so they
+   look identical on every device (unlike Unicode chess glyphs).
 
    Progressive enhancement only: if the API is unreachable, the CDN
    is blocked, or no usable game turns up, the section just stays
@@ -19,7 +23,9 @@
   if (!section) return;
 
   const USERNAME = 'Balubaidd'; // if this account is ever renamed, update it — Chess.com's games endpoints look the account up by name
-  const REPLAY_PLIES = 3;          // how many of the game's final moves (plies) to play out
+  const REPLAY_PLIES = 5;          // how many of the game's final moves (plies) to play out
+  const MOVE_GAP_MS = 1100;        // pause between moves while replaying
+  const SLIDE_MS = 350;            // how long a piece takes to slide to its square (also drives the CSS transition)
   const MONTHS_TO_SEARCH = 3;      // how far back to look if the latest month has nothing usable
   const CHESSJS_URL = 'https://unpkg.com/chess.js@1.4.0/dist/esm/chess.js';
   const CACHE_KEY = 'chess-latest:v2:' + USERNAME.toLowerCase(); // v2: entries now carry avatar URLs
@@ -145,51 +151,6 @@
     outcome = 'draw'; title = 'Draw'; detail = DRAW_BY[me.result] || DRAW_BY[opp.result] || '';
   }
 
-  /* ── pixel-art pieces: '#' = silhouette; outline, shade (right edge)
-     and highlight (left edge) are derived, so each piece is just a shape ── */
-  const SPRITE_W = 11, SPRITE_H = 12;
-  const SPRITES = {
-    p: ['...........', '...........', '....###....', '...#####...', '...#####...', '....###....',
-        '...#####...', '....###....', '....###....', '...#####...', '..#######..', '..#######..'],
-    r: ['...........', '.##.###.##.', '.#########.', '..#######..', '...#####...', '...#####...',
-        '...#####...', '...#####...', '..#######..', '.#########.', '.#########.', '.#########.'],
-    n: ['....##.....', '...####....', '..######...', '.#######...', '##.######..', '####.#####.',
-        '####.######', '.##..######', '....#######', '.....######', '..#########', '.##########'],
-    b: ['.....#.....', '....###....', '...#####...', '...##.##...', '...#####...', '....###....',
-        '.....#.....', '....###....', '...#####...', '....###....', '..#######..', '..#######..'],
-    q: ['.#...#...#.', '#.#.#.#.#.#', '.#########.', '.#########.', '..#######..', '...#####...',
-        '...#####...', '....###....', '...#####...', '..#######..', '.#########.', '.#########.'],
-    k: ['.....#.....', '...#####...', '.....#.....', '.....#.....', '..#######..', '.#########.',
-        '.#########.', '..#######..', '...#####...', '..#######..', '.#########.', '.#########.'],
-  };
-  const spriteCache = {};
-  function spriteSvg(type) {
-    if (spriteCache[type]) return spriteCache[type];
-    const rows = SPRITES[type];
-    const solid = (x, y) => x >= 0 && x < SPRITE_W && y >= 0 && y < SPRITE_H && rows[y][x] === '#';
-    const paths = { o: '', f: '', s: '', h: '' };
-    for (let y = -1; y <= SPRITE_H; y++) {
-      let cls = null, start = 0;
-      const flush = (x) => {
-        if (cls) paths[cls] += `M${start} ${y}h${x - start}v1h${start - x}z`;
-      };
-      for (let x = -1; x <= SPRITE_W + 1; x++) {
-        let c = null;
-        if (solid(x, y)) {
-          if (!solid(x + 1, y) && solid(x - 1, y)) c = 's';
-          else if (!solid(x - 1, y) && solid(x + 1, y)) c = 'h';
-          else c = 'f';
-        } else if (solid(x + 1, y) || solid(x - 1, y) || solid(x, y + 1) || solid(x, y - 1)) {
-          c = 'o';
-        }
-        if (c !== cls) { flush(x); cls = c; start = x; }
-      }
-    }
-    const svg = `<svg viewBox="-1 -1 ${SPRITE_W + 2} ${SPRITE_H + 2}" preserveAspectRatio="xMidYMax meet" shape-rendering="crispEdges" aria-hidden="true">` +
-      ['o', 'f', 's', 'h'].map((k) => `<path class="${k}" d="${paths[k]}"/>`).join('') + '</svg>';
-    return (spriteCache[type] = svg);
-  }
-
   /* ── board ────────────────────────────────────────────────── */
   const boardEl = document.getElementById('chessBoard');
   const flipped = myColor === 'b'; // always show my side at the bottom
@@ -217,6 +178,7 @@
   const piecesEl = document.createElement('div');
   piecesEl.className = 'chess-pieces';
   boardEl.appendChild(piecesEl);
+  boardEl.style.setProperty('--chess-slide', SLIDE_MS + 'ms'); // one source of truth for the slide time
 
   let pieces = []; // { el, type, color, sq }
   const pieceAt = (sq) => pieces.find((p) => p.sq === sq);
@@ -227,8 +189,7 @@
   }
   function addPiece(type, color, sq) {
     const el = document.createElement('div');
-    el.className = 'chess-piece ' + color;
-    el.innerHTML = spriteSvg(type);
+    el.className = 'chess-piece ' + color + type; // e.g. "wn" -> img/pieces/wn.svg via css/home.css
     place(el, sq);
     piecesEl.appendChild(el);
     pieces.push({ el, type, color, sq });
@@ -254,13 +215,20 @@
   }
 
   function applyMove(m, animate) {
-    // en passant removes the pawn *behind* the destination, not on it
+    const slide = animate ? SLIDE_MS : 0;
+    // pin down the pieces' current style first, so changing their transform below
+    // always has a start point to transition from (never a teleport)
+    void piecesEl.offsetWidth;
+
+    // en passant removes the pawn *behind* the destination, not on it. Like
+    // Chess.com, the captured piece stays put (under the mover) until the
+    // capturing piece lands, then simply disappears.
     const capturedSq = m.captured ? (m.flags.includes('e') ? m.to[0] + m.from[1] : m.to) : null;
     const victim = capturedSq && pieceAt(capturedSq);
     if (victim) {
       pieces = pieces.filter((p) => p !== victim);
       victim.el.classList.add('is-captured');
-      setTimeout(() => victim.el.remove(), animate ? 500 : 0);
+      setTimeout(() => victim.el.remove(), slide);
     }
 
     const mover = pieceAt(m.from);
@@ -268,9 +236,12 @@
       mover.sq = m.to;
       mover.el.classList.add('is-moving');
       place(mover.el, m.to);
-      setTimeout(() => mover.el.classList.remove('is-moving'), animate ? 850 : 0);
-      if (m.promotion) {
-        setTimeout(() => { mover.type = m.promotion; mover.el.innerHTML = spriteSvg(m.promotion); }, animate ? 650 : 0);
+      setTimeout(() => mover.el.classList.remove('is-moving'), slide);
+      if (m.promotion) { // the pawn turns into its new piece once it has arrived
+        setTimeout(() => {
+          mover.type = m.promotion;
+          mover.el.className = 'chess-piece ' + mover.color + m.promotion;
+        }, slide);
       }
     }
 
@@ -337,19 +308,52 @@
   fillPlayer(topEl, opp, iAmWhite ? 'b' : 'w', iAmWhite ? avatars.black : avatars.white);
   fillPlayer(bottomEl, me, myColor, iAmWhite ? avatars.white : avatars.black);
 
+  // Chess.com's move list: numbered rows, White in one column and Black in the
+  // other, with a small piece icon where algebraic notation would use a letter
+  // (Nf3 -> ♞f3). A row that opens on Black's move leaves White's cell as "…".
+  const PIECE_NAMES = { K: 'King', Q: 'Queen', R: 'Rook', B: 'Bishop', N: 'Knight' };
+  function fillMoveCell(cell, san) {
+    // in SAN, uppercase K/Q/R/B/N is always a piece letter (files are lowercase),
+    // including the promotion piece in "e8=Q+"
+    san.split(/([KQRBN])/).forEach((part) => {
+      if (!part) return;
+      if (PIECE_NAMES[part]) {
+        const fig = document.createElement('span');
+        fig.className = 'chess-fig ' + part.toLowerCase();
+        fig.setAttribute('role', 'img');
+        fig.setAttribute('aria-label', PIECE_NAMES[part]);
+        cell.appendChild(fig);
+      } else {
+        cell.appendChild(document.createTextNode(part));
+      }
+    });
+  }
+
   const movesEl = document.getElementById('chessMoves');
+  let row = null;
   const chips = replayMoves.map((m, k) => {
     const ply = history.length - n + k; // 0-based ply index in the whole game
-    const li = document.createElement('li');
-    li.className = 'chess-move';
-    const num = document.createElement('span');
-    num.className = 'num';
-    num.textContent = Math.floor(ply / 2) + 1 + (ply % 2 === 0 ? '.' : '…');
-    const san = document.createElement('span');
-    san.textContent = m.san;
-    li.append(num, san);
-    movesEl.appendChild(li);
-    return li;
+    const blackToMove = ply % 2 === 1;
+    if (!row || !blackToMove) { // a new row for every White move (and for the very first ply)
+      row = document.createElement('li');
+      row.className = 'chess-row';
+      const num = document.createElement('span');
+      num.className = 'num';
+      num.textContent = Math.floor(ply / 2) + 1 + '.';
+      row.appendChild(num);
+      if (blackToMove) {
+        const gap = document.createElement('span');
+        gap.className = 'chess-move is-gap';
+        gap.textContent = '…';
+        row.appendChild(gap);
+      }
+      movesEl.appendChild(row);
+    }
+    const cell = document.createElement('span');
+    cell.className = 'chess-move';
+    fillMoveCell(cell, m.san);
+    row.appendChild(cell);
+    return cell;
   });
 
   const resultEl = document.getElementById('chessResult');
@@ -420,7 +424,7 @@
         c.classList.toggle('is-played', j < k);
       });
       applyMove(replayMoves[k], animate);
-      await sleep(animate ? 1400 : 700);
+      await sleep(animate ? MOVE_GAP_MS : 700);
     }
     if (id !== runId) return;
     chips.forEach((c) => { c.classList.add('is-played'); c.classList.remove('is-current'); });
