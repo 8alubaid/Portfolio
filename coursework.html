@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coursework — Faris Balubaid</title>
+  <meta name="description" content="Engineering coursework from my Electrical & Computer Engineering degree at CU Boulder — PCB design, embedded systems, software and networking projects, sorted into category drawers." />
+  <meta name="theme-color" content="#09090f" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/coursework.css">
+</head>
+<body>
+
+  <div class="scroll-progress" id="scrollProgress"></div>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"><span class="cursor-label" id="cursorLabel"></span></div>
+
+  <!-- NAV -->
+  <nav class="site-nav">
+    <a class="nav-logo" href="index.html"><span class="nav-status-dot"></span>FarisBalubaid.cloud</a>
+    <ul class="nav-links">
+      <li><a href="index.html#experience">Experience</a></li>
+      <li><a href="index.html#projects">Projects</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section id="cw-hero">
+    <div class="container">
+      <div class="section-label">School Engineering</div>
+      <h1 class="cw-heading">Coursework</h1>
+      <p class="cw-lede">
+        Labs, builds and assignments from my Electrical &amp; Computer Engineering degree at CU Boulder,
+        filed into drawers by topic. Pull one open to see what's inside.
+      </p>
+      <a href="index.html#projects" class="btn btn-outline magnetic">← Back to Projects</a>
+    </div>
+  </section>
+
+  <!-- CABINET + LIST (js/coursework.js fills both from js/coursework-data.js) -->
+  <section id="cw-browse">
+    <div class="container">
+      <div class="cabinet" id="cwCabinet" role="group" aria-label="Project categories"></div>
+      <div class="cw-status" id="cwStatus" aria-live="polite"></div>
+      <ul class="cw-list" id="cwList"></ul>
+      <noscript><p class="cw-noscript">The project drawers need JavaScript — please enable it to browse the coursework.</p></noscript>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>© 2026 Faris Balubaid</span>
+    <span>Built with HTML · CSS · JS</span>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/coursework-data.js"></script>
+  <script src="js/coursework.js"></script>
+
+</body>
+</html>

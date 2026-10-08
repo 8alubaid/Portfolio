@@ -33,6 +33,7 @@ No framework, no build step — static HTML/CSS/JS designed to load instantly an
 ```
 Website/
 ├── index.html            # Home — hero, experience, project grid, contact
+├── coursework.html       # Coursework archive — category drawers over a project list (not linked from the home page yet)
 ├── project-1.html        # Case study — DemoSat RadTest (Colorado Space Grant / NASA)
 ├── project-2.html        # Case study — Dockerized Message Board
 ├── project-3.html        # Case study — Golden Arduino PCB Design
@@ -41,7 +42,8 @@ Website/
 ├── css/
 │   ├── base.css           # Design tokens, reset, cursor, nav, shared components
 │   ├── home.css           # Styles unique to index.html
-│   └── project.css        # Styles unique to the project-N.html case studies
+│   ├── project.css        # Styles unique to the project-N.html case studies
+│   └── coursework.css     # Styles unique to coursework.html
 ├── js/
 │   ├── main.js            # Custom cursor, scroll-reveal, scroll progress, resume-button reveal
 │   ├── hero-scene.js      # three.js WebGL globe scene (index.html hero only)
@@ -50,7 +52,9 @@ Website/
 │   ├── region-data.js     # Colorado's state outline
 │   ├── avatar-scene.js    # three.js voxel-bust scene for the hero avatar (index.html only)
 │   ├── avatar-data.js     # Generated per-pixel voxel positions/colors for the avatar bust
-│   └── chess-replay.js    # Latest Chess.com game → scroll-triggered replay of its last moves
+│   ├── chess-replay.js    # Latest Chess.com game → scroll-triggered replay of its last moves
+│   ├── coursework-data.js # THE file to edit to add a coursework project (categories + projects)
+│   └── coursework.js      # Draws the drawers and project list from coursework-data.js
 ├── scripts/
 │   ├── generate-map-data.py    # Regenerates the three globe data files above from source datasets
 │   └── generate-avatar-data.py # Regenerates js/avatar-data.js from a source portrait
@@ -183,6 +187,14 @@ To swap in a different portrait: replace `img/avatar-source.png` (needs real alp
 - **Degrades to nothing**: the section is `hidden` in the HTML and only revealed once a game has loaded and the board is built. If the API is down or rate-limited, the CDN is blocked, or no usable game turns up, it simply never appears. `prefers-reduced-motion` skips the autoplay — the board lands on the final position with the result shown, and Replay steps through the moves without sliding.
 
 To point it at a different account — or after renaming this one — change `USERNAME` at the top of the file. A rename is worth knowing about: Chess.com's *games* endpoints look the account up by name, so the old name starts returning "user not found" for games even while the profile endpoint still answers, and the section just disappears (that's exactly what happened when this account moved from `Anas433` to `Balubaidd`). If a game comes back where neither player matches `USERNAME`, the section hides itself rather than draw the board from the wrong side. Notes: only standard chess is shown (variants like Chess960 or bughouse are skipped), and the "latest game" is whatever finished most recently — a loss or an abandoned game included — it isn't filtered.
+
+## Coursework Archive
+
+`coursework.html` is the home for all the school engineering work, sorted like a parts cabinet: each category is a **drawer** (label plate, project count, pull handle). Click a drawer to filter the list to it, click it again or "Show all" to clear; the open drawer is mirrored in the URL (`coursework.html#electronics`) so a drawer can be linked to directly. The three case-study projects on the home page stay as the highlights; this page is where everything else goes.
+
+**To add a project, edit only `js/coursework-data.js`** — the header comment there shows every field. A project needs a `title`, a `category` id and a `summary`; `tags`, `course`, `term`, a `page` (a write-up page in this site) and a `github` link (must be under `github.com/8alubaid/`) are optional, and the "Read the write-up" / "Code on GitHub" links appear only when those are set. A drawer **only appears once something is filed in it**, so categories can be listed ahead of time without showing empty drawers. To add a category, add an entry to `categories` and file a project under its `id`. All text is written with `textContent` and links are validated before use.
+
+The page isn't linked from the home page yet — it would only repeat the three cards already there. When it has a real batch of projects, add a link under the Projects grid in `index.html` (e.g. `<a class="btn btn-outline" href="coursework.html">All coursework →</a>`).
 
 ## Adding a New Project
 
